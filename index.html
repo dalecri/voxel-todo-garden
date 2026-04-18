@@ -801,6 +801,75 @@ renderTodos();
 buildStrips();
 buildTaskTrees();
 
+// ── Sakura petals around main torii ──────────────────────────────────────────
+// Tiny flat quads, instanced — one draw call, very cheap
+const PETAL_COUNT = IS_MOBILE ? 18 : 35;
+const PETAL_CX = 3, PETAL_CZ = 0; // centred on main torii
+const PETAL_R  = 6;  // spawn radius
+const PETAL_TOP = getH(PETAL_CX, PETAL_CZ) + 14; // just above torii top
+const PETAL_BOT = PETAL_TOP - 10;                 // drop range
+
+const petalGeo = new THREE.PlaneGeometry(.22, .16);
+const petalMat = new THREE.MeshStandardMaterial({
+  color:'#f8b8d0', emissive:'#e06080', emissiveIntensity:.4,
+  roughness:.9, side:THREE.DoubleSide,
+  transparent:true, opacity:.88,
+});
+const petalMesh = new THREE.InstancedMesh(petalGeo, petalMat, PETAL_COUNT);
+petalMesh.frustumCulled = false;
+scene.add(petalMesh);
+
+// Per-petal state — stored in plain arrays for speed
+const petal = {
+  x: new Float32Array(PETAL_COUNT),
+  y: new Float32Array(PETAL_COUNT),
+  z: new Float32Array(PETAL_COUNT),
+  vx:new Float32Array(PETAL_COUNT), // horizontal drift speed
+  vz:new Float32Array(PETAL_COUNT),
+  vy:new Float32Array(PETAL_COUNT), // fall speed
+  phase:new Float32Array(PETAL_COUNT), // sway phase offset
+  spin:new Float32Array(PETAL_COUNT),  // rotation speed
+  rot: new Float32Array(PETAL_COUNT),  // current rotation
+};
+
+const _petalDummy = new THREE.Object3D();
+function resetPetal(i){
+  const a = Math.random()*Math.PI*2, r = Math.random()*PETAL_R;
+  petal.x[i] = PETAL_CX + Math.cos(a)*r;
+  petal.z[i] = PETAL_CZ + Math.sin(a)*r;
+  petal.y[i] = PETAL_TOP - Math.random()*2; // stagger spawn height
+  petal.vx[i]= (Math.random()-.5)*.012;
+  petal.vz[i]= (Math.random()-.5)*.012;
+  petal.vy[i]= .018 + Math.random()*.014;
+  petal.phase[i] = Math.random()*Math.PI*2;
+  petal.spin[i]  = (Math.random()-.5)*.06;
+  petal.rot[i]   = Math.random()*Math.PI*2;
+}
+for(let i=0;i<PETAL_COUNT;i++){
+  resetPetal(i);
+  petal.y[i] = PETAL_BOT + Math.random()*(PETAL_TOP-PETAL_BOT); // spread on load
+}
+
+function tickPetals(elapsed){
+  for(let i=0;i<PETAL_COUNT;i++){
+    petal.y[i] -= petal.vy[i];
+    petal.x[i] += petal.vx[i] + Math.sin(elapsed*.7+petal.phase[i])*.008;
+    petal.z[i] += petal.vz[i] + Math.cos(elapsed*.5+petal.phase[i])*.006;
+    petal.rot[i]+= petal.spin[i];
+    if(petal.y[i] < PETAL_BOT) resetPetal(i);
+    _petalDummy.position.set(petal.x[i], petal.y[i], petal.z[i]);
+    _petalDummy.rotation.set(
+      Math.sin(elapsed*.4+petal.phase[i])*.5,
+      petal.rot[i],
+      Math.cos(elapsed*.3+petal.phase[i])*.4
+    );
+    _petalDummy.scale.setScalar(.8+Math.sin(petal.phase[i])*.2);
+    _petalDummy.updateMatrix();
+    petalMesh.setMatrixAt(i, _petalDummy.matrix);
+  }
+  petalMesh.instanceMatrix.needsUpdate = true;
+}
+
 // ── Animate ───────────────────────────────────────────────────────────────────
 const clock = new THREE.Clock();
 let frameN=0;
@@ -809,7 +878,7 @@ function animate(){
   frameN++;
   if(IS_MOBILE && frameN%2!==0) return;
   const elapsed=clock.getElapsedTime();
-  // no per-frame tick needed for lamps
+  tickPetals(elapsed);
   scene.fog.density=FOG_BASE*AMB.fogDensity;
   controls.update();
   renderer.render(scene,camera);
