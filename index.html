@@ -431,28 +431,54 @@ function createTikiTorch(x,z){
 // ── Red lantern string (emissive only) ────────────────────────────────────────
 function createLanternString(ax,az,bx,bz,count=5,h=7){
   const postMat=new THREE.MeshStandardMaterial({color:'#2a2218',roughness:.8});
+  const ropeMat=new THREE.MeshStandardMaterial({color:'#3a3020',roughness:.95});
   const ay=getH(ax,az)+h, by=getH(bx,bz)+h;
+
+  // Compute all lantern world positions first so we can draw rope between them
+  const pts=[]; // {x,y,z} for each i from 0..count
   for(let i=0;i<=count;i++){
     const t=i/count;
     const lx=ax+(bx-ax)*t, lz=az+(bz-az)*t;
     const sag=Math.sin(t*Math.PI)*2.8;
     const ly=ay+(by-ay)*t-sag;
-    if(i===0||i===count){
-      const gy=getH(lx,lz);
-      const postH=Math.max(1.5,ly-gy+.2);
-      const post=new THREE.Mesh(new THREE.CylinderGeometry(.12,.15,postH,7),postMat);
-      post.position.set(lx,gy+postH/2,lz); scene.add(post);
-    }
-    if(i>0&&i<count){
-      const lg=new THREE.Group();
-      const body=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.9,8),EMIT.lanternBody);
-      const topC=new THREE.Mesh(new THREE.CylinderGeometry(.22,.38,.18,8),postMat); topC.position.y=.54;
-      const botC=new THREE.Mesh(new THREE.CylinderGeometry(.38,.22,.18,8),postMat); botC.position.y=-.54;
-      const glw=new THREE.Mesh(new THREE.SphereGeometry(.26,6,6),EMIT.lanternGlow);
-      lg.add(body,topC,botC,glw);
-      lg.position.set(lx,ly-.95,lz);
-      scene.add(lg);
-    }
+    pts.push({x:lx, y:ly, z:lz});
+  }
+
+  // Draw posts at endpoints
+  [0,count].forEach(i=>{
+    const {x,y,z}=pts[i];
+    const gy=getH(x,z);
+    const postH=Math.max(1.5,y-gy+.2);
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(.12,.15,postH,7),postMat);
+    post.position.set(x,gy+postH/2,z); scene.add(post);
+  });
+
+  // Draw rope segments between every adjacent pair of points
+  for(let i=0;i<count;i++){
+    const a=pts[i], b=pts[i+1];
+    const dx=b.x-a.x, dy=b.y-a.y, dz=b.z-a.z;
+    const len=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    const rope=new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,len,4),ropeMat);
+    // Position at midpoint, orient along segment
+    rope.position.set((a.x+b.x)/2,(a.y+b.y)/2,(a.z+b.z)/2);
+    rope.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0,1,0),
+      new THREE.Vector3(dx,dy,dz).normalize()
+    );
+    scene.add(rope);
+  }
+
+  // Draw lanterns
+  for(let i=1;i<count;i++){
+    const {x,y,z}=pts[i];
+    const lg=new THREE.Group();
+    const body=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.9,8),EMIT.lanternBody);
+    const topC=new THREE.Mesh(new THREE.CylinderGeometry(.22,.38,.18,8),postMat); topC.position.y=.54;
+    const botC=new THREE.Mesh(new THREE.CylinderGeometry(.38,.22,.18,8),postMat); botC.position.y=-.54;
+    const glw=new THREE.Mesh(new THREE.SphereGeometry(.26,6,6),EMIT.lanternGlow);
+    lg.add(body,topC,botC,glw);
+    lg.position.set(x,y-.95,z);
+    scene.add(lg);
   }
 }
 
