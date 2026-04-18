@@ -14,20 +14,30 @@ body{overflow:hidden;background:#000;font-family:system-ui,sans-serif}
   border:1px solid rgba(255,255,255,.15);border-radius:20px;
   padding:5px 14px;font-size:12px;color:rgba(255,255,255,.8);
   pointer-events:none;letter-spacing:.04em;z-index:100;
+  white-space:nowrap;
 }
-#amb-fab{
-  position:fixed;bottom:24px;right:16px;
-  width:42px;height:42px;border-radius:50%;
-  background:rgba(20,20,30,.7);backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.2);color:#fff;
-  font-size:18px;cursor:pointer;z-index:900;
-  box-shadow:0 4px 16px rgba(0,0,0,.4);
+/* ── FABs ── */
+#amb-fab,#todo-fab{
+  position:fixed;bottom:max(20px,env(safe-area-inset-bottom,20px));
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(20,20,30,.82);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.22);color:#fff;
+  font-size:20px;cursor:pointer;z-index:900;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);
   transition:transform .15s,background .15s;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
 }
-#amb-fab:hover{transform:scale(1.08);background:rgba(40,40,60,.8)}
+#amb-fab{right:16px}
+#todo-fab{left:16px}
+#amb-fab:active,#todo-fab:active{transform:scale(.93)}
+/* ── Ambience panel ── */
 #amb-panel{
-  position:fixed;bottom:78px;right:16px;width:230px;
-  background:rgba(14,16,22,.75);backdrop-filter:blur(20px);
+  position:fixed;
+  bottom:calc(max(20px,env(safe-area-inset-bottom,20px)) + 54px);
+  right:16px;
+  width:min(230px,calc(100vw - 32px));
+  background:rgba(14,16,22,.85);backdrop-filter:blur(20px);
   border:1px solid rgba(255,255,255,.13);border-radius:14px;
   padding:14px 16px 12px;z-index:901;
   box-shadow:0 8px 32px rgba(0,0,0,.6);
@@ -36,73 +46,73 @@ body{overflow:hidden;background:#000;font-family:system-ui,sans-serif}
 #amb-panel.hidden{opacity:0;pointer-events:none;transform:scale(.92) translateY(8px)}
 .ap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .ap-title{font-size:11px;font-weight:600;letter-spacing:.07em;color:rgba(255,255,255,.6);text-transform:uppercase}
-.ap-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:14px;cursor:pointer;padding:0;line-height:1}
+.ap-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:4px;line-height:1}
 .ap-close:hover{color:#fff}
 .ap-row{display:flex;flex-direction:column;gap:4px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07)}
 .ap-row:last-child{border-bottom:none}
 .ap-lbl{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8)}
 .ap-val{font-size:11px;color:rgba(255,255,255,.4);min-width:32px;text-align:right}
-input[type=range]{width:100%;height:4px;-webkit-appearance:none;appearance:none;
-  background:rgba(255,255,255,.2);border-radius:4px;margin-top:4px;outline:none;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;
+input[type=range]{width:100%;height:6px;-webkit-appearance:none;appearance:none;
+  background:rgba(255,255,255,.2);border-radius:4px;margin-top:6px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;
   border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
-.ap-reset{margin-top:10px;width:100%;padding:6px;border-radius:8px;font-size:11px;
+.ap-reset{margin-top:10px;width:100%;padding:8px;border-radius:8px;font-size:12px;
   background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
   color:rgba(255,255,255,.65);cursor:pointer;transition:background .15s}
 .ap-reset:hover{background:rgba(255,255,255,.2);color:#fff}
-
-/* ── Todo ── */
-#todo-fab{
-  position:fixed;bottom:24px;left:16px;
-  width:42px;height:42px;border-radius:50%;
-  background:rgba(20,20,30,.7);backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.2);color:#fff;
-  font-size:18px;cursor:pointer;z-index:900;
-  box-shadow:0 4px 16px rgba(0,0,0,.4);
-  transition:transform .15s,background .15s;
-}
-#todo-fab:hover{transform:scale(1.08);background:rgba(40,40,60,.8)}
+/* ── Todo panel ── */
 #todo-panel{
-  position:fixed;bottom:78px;left:16px;width:260px;
-  background:rgba(14,16,22,.78);backdrop-filter:blur(20px);
+  position:fixed;
+  bottom:calc(max(20px,env(safe-area-inset-bottom,20px)) + 54px);
+  left:16px;
+  width:min(270px,calc(100vw - 32px));
+  background:rgba(14,16,22,.85);backdrop-filter:blur(20px);
   border:1px solid rgba(255,255,255,.13);border-radius:14px;
   padding:14px 16px 12px;z-index:901;
   box-shadow:0 8px 32px rgba(0,0,0,.6);
   transition:opacity .2s,transform .2s;transform-origin:bottom left;
-  max-height:420px;display:flex;flex-direction:column;gap:10px;
+  max-height:min(420px,60vh);display:flex;flex-direction:column;gap:10px;
 }
 #todo-panel.hidden{opacity:0;pointer-events:none;transform:scale(.92) translateY(8px)}
 .td-head{display:flex;align-items:center;justify-content:space-between}
 .td-title{font-size:11px;font-weight:600;letter-spacing:.07em;color:rgba(255,255,255,.6);text-transform:uppercase}
-.td-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:14px;cursor:pointer;padding:0;line-height:1}
+.td-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:4px;line-height:1}
 .td-close:hover{color:#fff}
-#todo-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:5px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
-.td-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);transition:background .15s;cursor:pointer}
+#todo-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:5px;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent;
+  -webkit-overflow-scrolling:touch;}
+.td-item{display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:8px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
+  transition:background .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .td-item:hover{background:rgba(255,255,255,.09)}
 .td-item.done{opacity:.45}
 .td-item.done .td-text{text-decoration:line-through}
-.td-check{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
+.td-check{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s}
 .td-item.done .td-check{background:#4a9a5a;border-color:#4a9a5a}
 .td-text{font-size:13px;color:rgba(255,255,255,.85);flex:1;word-break:break-word;line-height:1.35}
-.td-del{background:none;border:none;color:rgba(255,255,255,.2);font-size:14px;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;transition:color .15s}
-.td-del:hover{color:rgba(255,100,100,.8)}
+.td-del{background:none;border:none;color:rgba(255,255,255,.25);font-size:18px;
+  cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;transition:color .15s;
+  -webkit-tap-highlight-color:transparent;}
+.td-del:hover,.td-del:active{color:rgba(255,100,100,.9)}
 .td-add{display:flex;gap:6px}
-#todo-input{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;
-  padding:7px 10px;font-size:13px;color:#fff;outline:none;transition:border .15s}
+#todo-input{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;padding:9px 10px;font-size:14px;color:#fff;outline:none;
+  transition:border .15s;-webkit-appearance:none;}
 #todo-input::placeholder{color:rgba(255,255,255,.3)}
 #todo-input:focus{border-color:rgba(255,255,255,.35)}
-#todo-add-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:8px;
-  color:#fff;font-size:18px;width:34px;cursor:pointer;transition:background .15s;flex-shrink:0}
-#todo-add-btn:hover{background:rgba(255,255,255,.22)}
-
+#todo-add-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+  border-radius:8px;color:#fff;font-size:22px;width:40px;min-width:40px;
+  cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent;}
+#todo-add-btn:hover,#todo-add-btn:active{background:rgba(255,255,255,.25)}
+/* ── Tooltip ── */
 #lamp-tooltip{
   position:fixed;pointer-events:none;z-index:999;
-  background:rgba(10,12,18,.82);backdrop-filter:blur(10px);
+  background:rgba(10,12,18,.88);backdrop-filter:blur(10px);
   border:1px solid rgba(255,255,255,.15);border-radius:8px;
-  padding:6px 11px;font-size:12px;color:rgba(255,255,255,.9);
-  max-width:200px;line-height:1.4;white-space:pre-wrap;
-  box-shadow:0 4px 16px rgba(0,0,0,.5);
-  transition:opacity .1s;
+  padding:7px 12px;font-size:13px;color:rgba(255,255,255,.92);
+  max-width:min(220px,70vw);line-height:1.4;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);transition:opacity .1s;
 }
 #lamp-tooltip.hidden{opacity:0}
 </style>
@@ -295,100 +305,75 @@ function createTorii(cx,cz,rotY=0,scale=1){
   scene.add(g);
 }
 
-// ── Task lamps ────────────────────────────────────────────────────────────────
-// Pre-seeded random island positions (h > 3, spread across island)
-const LAMP_POOL = [
+// ── Task trees ────────────────────────────────────────────────────────────────
+const TREE_POOL = [
   [14,8],[-8,-12],[18,-6],[-16,4],[6,-20],[22,16],[-20,-14],[4,18],
   [-10,20],[16,-18],[-24,6],[10,10],[-6,-18],[20,-14],[-14,12],[8,22],
-].map(([x,z])=>[x,z]); // will filter by actual terrain on use
+];
 
-// Shared lamp materials — per-lamp glow gets its own instance for hover state
-const lampIronMat  = new THREE.MeshStandardMaterial({color:'#2a2a2a',roughness:.7,metalness:.4});
-const lampStoneMat = new THREE.MeshStandardMaterial({color:'#7a7570',roughness:.95});
-const lampIronCapMat = new THREE.MeshStandardMaterial({color:'#2a2a2a',roughness:.7,metalness:.4});
+const taskTrees = []; // { group, canopyMats, hitMesh, todo }
 
-const taskLamps = []; // { group, glowMat, haloMat, hitMesh, todo }
-
-function spawnTaskLamp(x, z, todo){
+function spawnTaskTree(x, z, todo){
   const y = getH(x, z);
   const g = new THREE.Group();
 
-  const base  = new THREE.Mesh(new THREE.CylinderGeometry(.32,.38,.3,7), lampStoneMat);
-  base.position.y = .15;
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(.06,.1,4.2,7), lampIronMat);
-  shaft.position.y = 2.35;
-  const cap   = new THREE.Mesh(new THREE.CylinderGeometry(0,.7,.5,4), lampIronCapMat);
-  cap.position.y = 5.35; cap.rotation.y = Math.PI/4;
+  // Trunk
+  const trunkMat = new THREE.MeshStandardMaterial({color: todo.done ? '#5a4020' : '#6b4a2a', roughness:.9});
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,2.5,6), trunkMat);
+  trunk.position.y = 1.25; g.add(trunk);
 
-  // Lantern box — per-lamp material so we can tint it
-  const lBoxMat = new THREE.MeshStandardMaterial({
-    color:'#1a1a1a', emissive: todo.done ? '#334455' : '#ffcc44',
-    emissiveIntensity: todo.done ? .5 : 1.32, roughness:.8, transparent:true, opacity:.85
+  // Canopy clouds — pink blossom if pending, bare/amber if done
+  const canopyMats = [];
+  const clouds = [[0,3.8,0,2.0],[1.1,3.2,.7,1.5],[-0.9,3.0,.5,1.3],[.35,4.3,-.5,1.7],[-1.2,3.4,-.7,1.2]];
+  clouds.forEach(([bx,by,bz,r])=>{
+    const mat = new THREE.MeshStandardMaterial({
+      color:   todo.done ? '#8a7060' : '#f4a0c0',
+      emissive:todo.done ? '#2a1a0a' : '#e06080',
+      emissiveIntensity: todo.done ? 0.05 : 0.25,
+      roughness:.9
+    });
+    canopyMats.push(mat);
+    const cloud = new THREE.Mesh(new THREE.DodecahedronGeometry(r,0), mat);
+    cloud.position.set(bx,by,bz); g.add(cloud);
   });
-  const lBox = new THREE.Mesh(new THREE.BoxGeometry(.72,.72,.72), lBoxMat);
-  lBox.position.y = 4.9;
 
-  // Glow sphere — own material per lamp
-  const glowMat = new THREE.MeshStandardMaterial({
-    color: todo.done ? '#8ab0cc' : '#fff8d0',
-    emissive: todo.done ? '#2255aa' : '#ffdd66',
-    emissiveIntensity: todo.done ? 2.5 : 12,
-    transparent:false, opacity:1.0
-  });
-  const glow = new THREE.Mesh(new THREE.SphereGeometry(.22,6,6), glowMat);
-  glow.position.y = 4.9;
+  // Invisible hit sphere — large, easy to hover
+  const hitMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(2.2,6,6),
+    new THREE.MeshBasicMaterial({visible:false})
+  );
+  hitMesh.position.y = 3.5; g.add(hitMesh);
 
-  // Halo — own material per lamp
-  const haloMat = new THREE.MeshStandardMaterial({
-    color: todo.done ? '#88aacc' : '#ffee88',
-    emissive: todo.done ? '#2244aa' : '#ffcc44',
-    emissiveIntensity: 1.5, transparent:true, opacity:.07, depthWrite:false, side:THREE.BackSide
-  });
-  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.1,6,6), haloMat);
-  halo.position.y = 4.9;
-
-  // Invisible hit mesh for raycasting — taller than the visible lamp so easy to hover
-  const hitGeo  = new THREE.CylinderGeometry(.6,.6,6,6);
-  const hitMat  = new THREE.MeshBasicMaterial({visible:false});
-  const hitMesh = new THREE.Mesh(hitGeo, hitMat);
-  hitMesh.position.y = 3;
-
-  g.add(base, shaft, lBox, glow, halo, cap, hitMesh);
   g.position.set(x, y, z);
   scene.add(g);
 
-  const entry = { group:g, glowMat, haloMat, lBoxMat, hitMesh, todo };
-  hitMesh.userData.lampEntry = entry;
-  taskLamps.push(entry);
+  const entry = { group:g, canopyMats, hitMesh, todo };
+  hitMesh.userData.treeEntry = entry;
+  taskTrees.push(entry);
   return entry;
 }
 
-function buildTaskLamps(){
-  // Remove existing
-  taskLamps.forEach(l=>scene.remove(l.group));
-  taskLamps.length = 0;
+function buildTaskTrees(){
+  taskTrees.forEach(t=>scene.remove(t.group));
+  taskTrees.length = 0;
 
-  // Shuffle a copy of the pool so positions vary
-  const pool = [...LAMP_POOL]
-    .filter(([x,z])=> getH(x,z) > 1)
-    .sort(()=>Math.random()-.5);
+  const validPool = TREE_POOL.filter(([x,z])=> getH(x,z) > 2);
 
   todos.forEach((t, i)=>{
-    if(i >= pool.length) return;
-    const [x,z] = pool[i];
-    // Nudge slightly so lamps don't all land on same terrain level
-    const nx = x + (Math.random()-.5)*2;
-    const nz = z + (Math.random()-.5)*2;
-    if(getH(nx, nz) <= 1) return; // nudge landed on water, skip
-    spawnTaskLamp(nx, nz, t);
+    if(i >= validPool.length) return;
+    // Stable nudge seeded from todo ID so position never changes
+    const seed = (t.id || i+1);
+    const nx = validPool[i][0] + ((seed*7919)%100)/100 - 0.5;
+    const nz = validPool[i][1] + ((seed*6271)%100)/100 - 0.5;
+    if(getH(nx,nz) <= 2) return;
+    spawnTaskTree(nx, nz, t);
   });
 }
 
 // ── Hover / tooltip ───────────────────────────────────────────────────────────
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-let hoveredLamp = null;
-
+let hoveredTree = null;
 const tooltip = document.getElementById('lamp-tooltip');
 
 function onPointerMove(e){
@@ -398,35 +383,33 @@ function onPointerMove(e){
   mouse.y = (clientY / innerHeight) * -2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
-  const hits = taskLamps.map(l=>l.hitMesh);
-  const intersects = raycaster.intersectObjects(hits);
+  const intersects = raycaster.intersectObjects(taskTrees.map(t=>t.hitMesh));
 
   if(intersects.length > 0){
-    const entry = intersects[0].object.userData.lampEntry;
-    if(entry !== hoveredLamp){
-      // Unhover previous
-      if(hoveredLamp) setLampHover(hoveredLamp, false);
-      hoveredLamp = entry;
-      setLampHover(entry, true);
+    const entry = intersects[0].object.userData.treeEntry;
+    if(entry !== hoveredTree){
+      if(hoveredTree) setTreeHover(hoveredTree, false);
+      hoveredTree = entry;
+      setTreeHover(entry, true);
     }
-    // Position tooltip near cursor
     tooltip.style.left = (clientX + 14) + 'px';
     tooltip.style.top  = (clientY - 12) + 'px';
-    tooltip.textContent = (entry.todo.done ? '✓ ' : '') + entry.todo.text;
+    tooltip.textContent = (entry.todo.done ? '✓ ' : '🌸 ') + entry.todo.text;
     tooltip.classList.remove('hidden');
     canvas.style.cursor = 'pointer';
   } else {
-    if(hoveredLamp){ setLampHover(hoveredLamp, false); hoveredLamp = null; }
+    if(hoveredTree){ setTreeHover(hoveredTree, false); hoveredTree = null; }
     tooltip.classList.add('hidden');
     canvas.style.cursor = '';
   }
 }
 
-function setLampHover(entry, on){
+function setTreeHover(entry, on){
   const done = entry.todo.done;
-  entry.glowMat.emissiveIntensity = on ? (done ? 6 : 22) : (done ? 2.5 : 12);
-  entry.haloMat.opacity           = on ? .25 : .09;
-  entry.lBoxMat.emissiveIntensity = on ? (done ? 1.1 : 2.4) : (done ? .5 : 1.32);
+  entry.canopyMats.forEach(m=>{
+    m.emissiveIntensity = on ? (done ? 0.15 : 0.7) : (done ? 0.05 : 0.25);
+    m.emissive.set(on ? (done ? '#4a2a0a' : '#ff88bb') : (done ? '#2a1a0a' : '#e06080'));
+  });
 }
 
 window.addEventListener('mousemove', onPointerMove, {passive:true});
@@ -615,8 +598,7 @@ createBambooGrove(10,-20);
 createBambooGrove(-8,20);
 createBambooGrove(-28,-8,IS_MOBILE?6:12);
 
-// Trees
-[[-6,8],[8,12],[-14,-10],[12,-6],[0,-18],[18,4],[-10,16]].forEach(([x,z])=>createTree(x,z));
+// Trees are task-driven — spawned by buildTaskTrees()
 
 // Torii gates
 createTorii(3,0,0);
@@ -753,7 +735,7 @@ try { todos = JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch(e){ tod
 function saveTodos(){
   localStorage.setItem(STORE_KEY, JSON.stringify(todos));
   buildStrips();
-  buildTaskLamps();
+  buildTaskTrees();
 }
 
 function renderTodos(){
@@ -791,7 +773,7 @@ document.getElementById('td-close').addEventListener('click',()=>todoPanel.class
 
 renderTodos();
 buildStrips();
-buildTaskLamps();
+buildTaskTrees();
 
 // ── Animate ───────────────────────────────────────────────────────────────────
 const clock = new THREE.Clock();
