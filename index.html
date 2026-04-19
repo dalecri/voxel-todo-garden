@@ -140,6 +140,49 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   padding:1px 6px;font-size:9px;color:rgba(255,255,255,.4);
   background:rgba(255,255,255,.06);
 }
+/* ── Mobile overrides ── */
+@media (max-width: 600px){
+  /* Task bar — full width, sits at very bottom */
+  #task-bar{
+    width:calc(100vw - 24px);
+    bottom:max(12px,env(safe-area-inset-bottom,12px));
+    padding:12px 14px 8px;
+    border-radius:12px;
+  }
+  #task-bar input{ font-size:16px; } /* prevent iOS zoom on focus */
+  #task-bar-hint{ display:none; } /* too cluttered on small screen */
+
+  /* FABs — sit above the task bar */
+  #amb-fab,#todo-fab{
+    width:44px;height:44px;
+    bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 72px);
+  }
+  #amb-fab{ right:12px; }
+  #todo-fab{ left:12px; }
+
+  /* Panels — full-width bottom sheets anchored above FABs */
+  #todo-panel{
+    left:12px;right:12px;width:auto;
+    bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 72px + 52px);
+    max-height:min(320px,52vh);
+    border-radius:14px;
+  }
+  #amb-panel{
+    left:12px;right:12px;width:auto;
+    bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 72px + 52px);
+    border-radius:14px;
+  }
+
+  /* Larger touch targets for task items */
+  .td-item{ padding:10px 10px; }
+  .td-check{ width:24px;height:24px; }
+  .td-del{ font-size:20px;padding:4px 6px; }
+  .td-text{ font-size:14px; }
+
+  /* Time badge — smaller on mobile */
+  #time-badge{ font-size:11px;padding:4px 10px;max-width:calc(100vw - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+}
+
 /* ── Tooltip ── */
 #lamp-tooltip{
   position:fixed;pointer-events:none;z-index:999;
@@ -660,12 +703,11 @@ function applyTime(){
   // Sky
   const sky=new THREE.Color().lerpColors(new THREE.Color('#0d1220'),new THREE.Color('#1a6ab0'),day);
   if(golden>.01) sky.lerp(new THREE.Color('#c04010'),golden*.7);
-  // Night emissive — terrain/world mats self-illuminate so voxels are always readable
+  scene.background=sky; scene.fog.color.copy(sky);
   // Warm amber tint at night (0.55), fully off during day
   const nightEmissive = night * 0.55;
   NIGHT_MATS.forEach(m => { m.emissiveIntensity = nightEmissive; });
 
-  scene.background=sky; scene.fog.color.copy(sky);
   // Hemi — warm amber floor at night, strong enough to read ground voxels
   hemi.intensity = night * 2.2 + day * 1.8;
   const nightHemiCol = new THREE.Color('#4a3010');
