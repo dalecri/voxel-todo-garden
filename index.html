@@ -16,173 +16,103 @@ body{overflow:hidden;background:#000;font-family:system-ui,sans-serif}
   pointer-events:none;letter-spacing:.04em;z-index:100;
   white-space:nowrap;
 }
-/* ── FABs ── */
+/* ── Shared glass token ── */
+:root{
+  --glass-bg:rgba(10,12,20,.72);
+  --glass-border:rgba(255,255,255,.11);
+  --glass-blur:blur(24px) saturate(160%);
+  --glass-shadow:0 6px 32px rgba(0,0,0,.55);
+  --mono:'SF Mono','Fira Mono','Consolas',monospace;
+}
+/* ── FABs — pill, monospace label ── */
 #amb-fab,#todo-fab{
-  position:fixed;bottom:max(20px,env(safe-area-inset-bottom,20px));
-  width:46px;height:46px;border-radius:50%;
-  background:rgba(20,20,30,.82);backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.22);color:#fff;
-  font-size:20px;cursor:pointer;z-index:902;
-  box-shadow:0 4px 16px rgba(0,0,0,.5);
-  transition:transform .15s,background .15s;
-  display:flex;align-items:center;justify-content:center;
-  -webkit-tap-highlight-color:transparent;
+  position:fixed;bottom:max(16px,env(safe-area-inset-bottom,16px));
+  display:flex;align-items:center;gap:7px;padding:0 14px;height:40px;border-radius:20px;
+  background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);
+  color:rgba(255,255,255,.72);cursor:pointer;z-index:902;
+  transition:background .15s,color .15s,transform .1s;-webkit-tap-highlight-color:transparent;
 }
-#amb-fab{
-  /* Centre in the right gap: screen-right to bar-right-edge */
-  /* Bar right edge = 50vw - min(310px, 50vw - 16px) from screen-right */
-  right:max(16px, calc((100vw - min(620px, 100vw - 32px)) / 4 - 23px));
-  bottom:max(16px,env(safe-area-inset-bottom,16px));
+#amb-fab:hover,#todo-fab:hover{background:rgba(20,24,38,.9);color:#fff;transform:translateY(-1px)}
+#amb-fab:active,#todo-fab:active{transform:scale(.96)}
+.fab-icon{font-size:14px;line-height:1;font-family:var(--mono);opacity:.8}
+.fab-label{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:lowercase}
+#amb-fab{right:max(16px, calc((100vw - min(620px, 100vw - 32px)) / 4 - 23px))}
+#todo-fab{left:max(16px, calc((100vw - min(620px, 100vw - 32px)) / 4 - 23px))}
+/* ── Panels ── */
+#amb-panel,#todo-panel{
+  position:fixed;z-index:901;
+  background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-border);border-radius:14px;box-shadow:var(--glass-shadow);
+  transition:opacity .2s,transform .2s;
 }
-#todo-fab{
-  left:max(16px, calc((100vw - min(620px, 100vw - 32px)) / 4 - 23px));
-  bottom:max(16px,env(safe-area-inset-bottom,16px));
-}
-#amb-fab:active,#todo-fab:active{transform:scale(.93)}
-/* ── Ambience panel ── */
-#amb-panel{
-  position:fixed;
-  bottom:calc(max(16px,env(safe-area-inset-bottom,16px)) + 60px);
-  right:16px;
-  width:min(230px,calc(100vw - 32px));
-  background:rgba(14,16,22,.85);backdrop-filter:blur(20px);
-  border:1px solid rgba(255,255,255,.13);border-radius:14px;
-  padding:14px 16px 12px;z-index:901;
-  box-shadow:0 8px 32px rgba(0,0,0,.6);
-  transition:opacity .2s,transform .2s;transform-origin:bottom right;
-}
-#amb-panel.hidden{opacity:0;pointer-events:none;transform:scale(.92) translateY(8px)}
-.ap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.ap-title{font-size:11px;font-weight:600;letter-spacing:.07em;color:rgba(255,255,255,.6);text-transform:uppercase}
-.ap-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:4px;line-height:1}
-.ap-close:hover{color:#fff}
-.ap-row{display:flex;flex-direction:column;gap:4px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+#amb-panel{bottom:calc(max(16px,env(safe-area-inset-bottom,16px)) + 52px);right:16px;width:min(230px,calc(100vw - 32px));padding:14px 16px 12px;transform-origin:bottom right}
+#amb-panel.hidden{opacity:0;pointer-events:none;transform:scale(.93) translateY(6px)}
+#todo-panel{bottom:calc(max(16px,env(safe-area-inset-bottom,16px)) + 52px);left:16px;width:min(270px,calc(100vw - 32px));padding:14px 16px 12px;max-height:min(340px,48vh);display:flex;flex-direction:column;gap:10px;transform-origin:bottom left}
+#todo-panel.hidden{opacity:0;pointer-events:none;transform:scale(.93) translateY(6px)}
+/* ── Panel internals ── */
+.ap-head,.td-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ap-title,.td-title{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase}
+.ap-close,.td-close{background:none;border:none;color:rgba(255,255,255,.32);font-size:14px;cursor:pointer;padding:4px;line-height:1}
+.ap-close:hover,.td-close:hover{color:rgba(255,255,255,.8)}
+.ap-row{display:flex;flex-direction:column;gap:4px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
 .ap-row:last-child{border-bottom:none}
-.ap-lbl{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8)}
-.ap-val{font-size:11px;color:rgba(255,255,255,.4);min-width:32px;text-align:right}
-input[type=range]{width:100%;height:6px;-webkit-appearance:none;appearance:none;
-  background:rgba(255,255,255,.2);border-radius:4px;margin-top:6px;outline:none;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;
-  border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
-.ap-reset{margin-top:10px;width:100%;padding:8px;border-radius:8px;font-size:12px;
-  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
-  color:rgba(255,255,255,.65);cursor:pointer;transition:background .15s}
-.ap-reset:hover{background:rgba(255,255,255,.2);color:#fff}
-/* ── Todo panel ── */
-#todo-panel{
-  position:fixed;
-  bottom:calc(max(16px,env(safe-area-inset-bottom,16px)) + 60px);
-  left:16px;
-  width:min(270px,calc(100vw - 32px));
-  background:rgba(14,16,22,.85);backdrop-filter:blur(20px);
-  border:1px solid rgba(255,255,255,.13);border-radius:14px;
-  padding:14px 16px 12px;z-index:901;
-  box-shadow:0 8px 32px rgba(0,0,0,.6);
-  transition:opacity .2s,transform .2s;transform-origin:bottom left;
-  max-height:min(340px,48vh);display:flex;flex-direction:column;gap:10px;
-}
-#todo-panel.hidden{opacity:0;pointer-events:none;transform:scale(.92) translateY(8px)}
-.td-head{display:flex;align-items:center;justify-content:space-between}
-.td-title{font-size:11px;font-weight:600;letter-spacing:.07em;color:rgba(255,255,255,.6);text-transform:uppercase}
-.td-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:4px;line-height:1}
-.td-close:hover{color:#fff}
-#todo-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:5px;
-  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent;
-  -webkit-overflow-scrolling:touch;}
-.td-item{display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:8px;
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
-  transition:background .15s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.td-item:hover{background:rgba(255,255,255,.09)}
-.td-item.done{opacity:.45}
+.ap-lbl{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6)}
+.ap-val{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.32);min-width:32px;text-align:right}
+input[type=range]{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.18);border-radius:4px;margin-top:8px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.ap-reset{margin-top:10px;width:100%;padding:7px;border-radius:8px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.45);cursor:pointer;transition:background .15s}
+.ap-reset:hover{background:rgba(255,255,255,.13);color:rgba(255,255,255,.8)}
+/* ── Task list ── */
+#todo-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:4px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;-webkit-overflow-scrolling:touch}
+.td-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);transition:background .15s;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.td-item:hover{background:rgba(255,255,255,.08)}
+.td-item.done{opacity:.38}
 .td-item.done .td-text{text-decoration:line-through}
-.td-check{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);
-  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s}
+.td-check{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,.22);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
 .td-item.done .td-check{background:#4a9a5a;border-color:#4a9a5a}
-.td-text{font-size:13px;color:rgba(255,255,255,.85);flex:1;word-break:break-word;line-height:1.35}
-.td-del{background:none;border:none;color:rgba(255,255,255,.25);font-size:18px;
-  cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;transition:color .15s;
-  -webkit-tap-highlight-color:transparent;}
-.td-del:hover,.td-del:active{color:rgba(255,100,100,.9)}
+.td-text{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.75);flex:1;word-break:break-word;line-height:1.4}
+.td-del{background:none;border:none;color:rgba(255,255,255,.18);font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;transition:color .15s;-webkit-tap-highlight-color:transparent}
+.td-del:hover,.td-del:active{color:rgba(255,80,80,.85)}
 /* ── Bottom task bar ── */
 #task-bar{
-  position:fixed;
-  bottom:max(16px,env(safe-area-inset-bottom,16px));
-  left:50%;transform:translateX(-50%);
+  position:fixed;bottom:max(16px,env(safe-area-inset-bottom,16px));left:50%;transform:translateX(-50%);
   width:min(620px,calc(100vw - 32px));
-  background:rgba(10,12,20,.72);
-  backdrop-filter:blur(24px) saturate(160%);
-  -webkit-backdrop-filter:blur(24px) saturate(160%);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:14px;
-  padding:14px 18px 10px;
-  z-index:900;
-  box-shadow:0 8px 40px rgba(0,0,0,.6);
+  background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-border);border-radius:14px;padding:12px 16px 10px;
+  z-index:900;box-shadow:var(--glass-shadow);
 }
-#task-bar input{
-  width:100%;background:none;border:none;outline:none;
-  font-family:'SF Mono','Fira Mono','Consolas',monospace;
-  font-size:15px;color:rgba(255,255,255,.88);
-  caret-color:rgba(255,200,100,.9);
-  -webkit-appearance:none;
+#task-bar-inner{display:flex;align-items:center;gap:8px}
+#task-bar input{flex:1;background:none;border:none;outline:none;font-family:var(--mono);font-size:14px;color:rgba(255,255,255,.85);caret-color:rgba(255,200,100,.9);-webkit-appearance:none}
+#task-bar input::placeholder{color:rgba(255,255,255,.2)}
+#task-submit{
+  display:none;width:30px;height:30px;flex-shrink:0;border-radius:8px;
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.13);
+  color:rgba(255,255,255,.6);cursor:pointer;align-items:center;justify-content:center;
+  transition:background .15s;-webkit-tap-highlight-color:transparent;
 }
-#task-bar input::placeholder{color:rgba(255,255,255,.22);font-style:normal}
-#task-bar-hint{
-  margin-top:7px;
-  font-family:'SF Mono','Fira Mono','Consolas',monospace;
-  font-size:10px;letter-spacing:.08em;
-  color:rgba(255,255,255,.28);text-transform:uppercase;
-  display:flex;align-items:center;justify-content:space-between;
+#task-submit:active{background:rgba(255,255,255,.2);color:#fff}
+#task-bar-hint{margin-top:8px;font-family:var(--mono);font-size:10px;letter-spacing:.07em;color:rgba(255,255,255,.2);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
+#task-bar-hint span{display:flex;gap:12px;align-items:center}
+.tbh-key{display:inline-block;border:1px solid rgba(255,255,255,.16);border-radius:4px;padding:1px 5px;font-size:9px;color:rgba(255,255,255,.3);background:rgba(255,255,255,.04)}
+/* ── Mobile ── */
+@media (max-width:600px){
+  #task-bar{width:calc(100vw - 24px);bottom:max(12px,env(safe-area-inset-bottom,12px));padding:12px 12px 10px;border-radius:12px}
+  #task-bar input{font-size:16px}
+  #task-submit{display:flex}
+  #task-bar-hint{display:none}
+  #amb-fab,#todo-fab{height:40px;padding:0 12px;bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 68px)}
+  .fab-label{display:none}
+  #amb-fab{right:12px}
+  #todo-fab{left:12px}
+  #todo-panel{left:12px;right:12px;width:auto;bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 68px + 48px);max-height:min(300px,50vh)}
+  #amb-panel{left:12px;right:12px;width:auto;bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 68px + 48px)}
+  .td-item{padding:10px}
+  .td-check{width:22px;height:22px}
+  .td-del{font-size:18px;padding:4px 6px}
+  .td-text{font-size:13px}
+  #time-badge{font-size:11px;padding:4px 10px;max-width:calc(100vw - 24px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
-#task-bar-hint span{display:flex;gap:14px;align-items:center}
-.tbh-key{
-  display:inline-block;
-  border:1px solid rgba(255,255,255,.2);border-radius:4px;
-  padding:1px 6px;font-size:9px;color:rgba(255,255,255,.4);
-  background:rgba(255,255,255,.06);
-}
-/* ── Mobile overrides ── */
-@media (max-width: 600px){
-  /* Task bar — full width, sits at very bottom */
-  #task-bar{
-    width:calc(100vw - 24px);
-    bottom:max(12px,env(safe-area-inset-bottom,12px));
-    padding:12px 14px 8px;
-    border-radius:12px;
-  }
-  #task-bar input{ font-size:16px; } /* prevent iOS zoom on focus */
-  #task-bar-hint{ display:none; } /* too cluttered on small screen */
-
-  /* FABs — sit above the task bar */
-  #amb-fab,#todo-fab{
-    width:44px;height:44px;
-    bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 72px);
-  }
-  #amb-fab{ right:12px; }
-  #todo-fab{ left:12px; }
-
-  /* Panels — full-width bottom sheets anchored above FABs */
-  #todo-panel{
-    left:12px;right:12px;width:auto;
-    bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 72px + 52px);
-    max-height:min(320px,52vh);
-    border-radius:14px;
-  }
-  #amb-panel{
-    left:12px;right:12px;width:auto;
-    bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 72px + 52px);
-    border-radius:14px;
-  }
-
-  /* Larger touch targets for task items */
-  .td-item{ padding:10px 10px; }
-  .td-check{ width:24px;height:24px; }
-  .td-del{ font-size:20px;padding:4px 6px; }
-  .td-text{ font-size:14px; }
-
-  /* Time badge — smaller on mobile */
-  #time-badge{ font-size:11px;padding:4px 10px;max-width:calc(100vw - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-}
-
 /* ── Tooltip ── */
 #lamp-tooltip{
   position:fixed;pointer-events:none;z-index:999;
@@ -200,18 +130,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 <div id="lamp-tooltip" class="hidden"></div>
 <div id="time-badge">☀️ Day</div>
 
-<!-- Ambience FAB — Lucide "wind" icon -->
+<!-- Ambience FAB -->
 <button id="amb-fab" title="Ambience">
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>
-  </svg>
+  <span class="fab-icon">◎</span>
+  <span class="fab-label">ambience</span>
 </button>
 
-<!-- Tasks FAB — Lucide "cherry" (sakura tree) icon -->
+<!-- Tasks FAB -->
 <button id="todo-fab" title="Tasks">
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M2 17a5 5 0 0 1 10 0c.56-2.093 2.48-4 5-4 3 0 5 2 5 5H2Z"/><path d="M12 17V7"/><path d="m7 11 5-5 5 5"/>
-  </svg>
+  <span class="fab-icon">❧</span>
+  <span class="fab-label">tasks</span>
 </button>
 <div id="todo-panel" class="hidden">
   <div class="td-head">
@@ -221,7 +149,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   <div id="todo-list"></div>
 </div>
 <div id="task-bar">
-  <input id="task-input" type="text" placeholder="plant a new task…" maxlength="120" autocomplete="off" spellcheck="false">
+  <div id="task-bar-inner">
+    <input id="task-input" type="text" placeholder="plant a new task…" maxlength="120" autocomplete="off" spellcheck="false">
+    <button id="task-submit" title="Add task">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </button>
+  </div>
   <div id="task-bar-hint">
     <span>PRESS ENTER TO PLANT · TAB TO VIEW TASKS</span>
     <span><span class="tbh-key">enter</span> / <span class="tbh-key">tab</span></span>
@@ -746,8 +681,8 @@ createBambooGrove(-28,-8,IS_MOBILE?6:12);
 // Trees are task-driven — spawned by buildTaskTrees()
 
 // Torii gates
+// Main torii only — shore torii removed
 createTorii(3,0,0);
-createTorii(26,24,Math.PI*1.25,0.65);
 
 // Shrine
 createShrine(-18,14);
@@ -920,7 +855,7 @@ taskInput.addEventListener('keydown', e=>{
 // Clicking the canvas blurs the input so orbit controls work
 canvas.addEventListener('pointerdown', ()=> taskInput.blur());
 
-document.getElementById('todo-add-btn') && document.getElementById('todo-add-btn').addEventListener('click', addTodo);
+document.getElementById('task-submit').addEventListener('click', addTodo);
 const todoFab = document.getElementById('todo-fab');
 const todoPanel = document.getElementById('todo-panel');
 todoFab.addEventListener('click',()=>todoPanel.classList.toggle('hidden'));
