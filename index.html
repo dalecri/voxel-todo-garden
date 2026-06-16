@@ -5,122 +5,167 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Voxel Garden</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{overflow:hidden;background:#000;font-family:system-ui,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+body{overflow:hidden;background:#000}
 #c{width:100vw;height:100vh;display:block}
-#time-badge{
-  position:fixed;top:14px;left:50%;transform:translateX(-50%);
-  background:rgba(0,0,0,.45);backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,.15);border-radius:20px;
-  padding:5px 14px;font-size:12px;color:rgba(255,255,255,.8);
-  pointer-events:none;letter-spacing:.04em;z-index:100;
-  white-space:nowrap;
-}
-/* ── Shared glass token ── */
+
 :root{
-  --glass-bg:rgba(10,12,20,.72);
-  --glass-border:rgba(255,255,255,.11);
-  --glass-blur:blur(24px) saturate(160%);
-  --glass-shadow:0 6px 32px rgba(0,0,0,.55);
-  --mono:'SF Mono','Fira Mono','Consolas',monospace;
+  --g-bg:    rgba(20,22,28,.72);
+  --g-bg2:   rgba(30,34,42,.80);
+  --g-border:rgba(255,255,255,.1);
+  --g-shadow:0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.07);
+  --g-ink:   rgba(255,255,255,.88);
+  --g-ink2:  rgba(255,255,255,.52);
+  --g-ink3:  rgba(255,255,255,.28);
+  --g-green: #58c462;
+  --mono:    'SF Mono','Fira Mono','Consolas',monospace;
+  --r:       50px;
+  --bar-w:   min(580px, calc(100vw - 32px));
+  --bar-bot: max(28px, env(safe-area-inset-bottom, 28px));
 }
-/* ── FABs — pill, monospace label ── */
-#amb-fab,#todo-fab{
-  position:fixed;bottom:max(16px,env(safe-area-inset-bottom,16px));
-  display:flex;align-items:center;gap:7px;padding:0 14px;height:40px;border-radius:20px;
-  background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);
-  color:rgba(255,255,255,.72);cursor:pointer;z-index:902;
-  transition:background .15s,color .15s,transform .1s;-webkit-tap-highlight-color:transparent;
+
+/* ── Time badge ── */
+#time-badge{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);
+  background:rgba(255,255,255,.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--g-border);border-radius:24px;
+  padding:6px 18px;font-size:11px;color:var(--g-ink2);
+  pointer-events:none;letter-spacing:.06em;z-index:100;
+  white-space:nowrap;font-family:var(--mono);
+  max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;text-align:center;
 }
-#amb-fab:hover,#todo-fab:hover{background:rgba(20,24,38,.9);color:#fff;transform:translateY(-1px)}
-#amb-fab:active,#todo-fab:active{transform:scale(.96)}
-.fab-icon{font-size:14px;line-height:1;font-family:var(--mono);opacity:.8}
-.fab-label{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:lowercase}
-#amb-fab{right:max(16px, calc((100vw - min(620px, 100vw - 32px)) / 4 - 23px))}
-#todo-fab{left:max(16px, calc((100vw - min(620px, 100vw - 32px)) / 4 - 23px))}
-/* ── Panels ── */
+
+/* ── Panels — glass, slide up from bar centre ── */
 #amb-panel,#todo-panel{
   position:fixed;z-index:901;
-  background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  border:1px solid var(--glass-border);border-radius:14px;box-shadow:var(--glass-shadow);
-  transition:opacity .2s,transform .2s;
+  left:50%;transform:translateX(-50%) translateY(0);
+  width:var(--bar-w);
+  transition:opacity .22s cubic-bezier(.16,1,.3,1), transform .22s cubic-bezier(.16,1,.3,1);
+  transform-origin:bottom center;
 }
-#amb-panel{bottom:calc(max(16px,env(safe-area-inset-bottom,16px)) + 52px);right:16px;width:min(230px,calc(100vw - 32px));padding:14px 16px 12px;transform-origin:bottom right}
-#amb-panel.hidden{opacity:0;pointer-events:none;transform:scale(.93) translateY(6px)}
-#todo-panel{bottom:calc(max(16px,env(safe-area-inset-bottom,16px)) + 52px);left:16px;width:min(270px,calc(100vw - 32px));padding:14px 16px 12px;max-height:min(340px,48vh);display:flex;flex-direction:column;gap:10px;transform-origin:bottom left}
-#todo-panel.hidden{opacity:0;pointer-events:none;transform:scale(.93) translateY(6px)}
+#amb-panel{
+  background:rgba(20,22,28,.68);
+  backdrop-filter:blur(28px) saturate(140%);
+  -webkit-backdrop-filter:blur(28px) saturate(140%);
+  border:1px solid var(--g-border);
+  border-radius:18px;
+  box-shadow:0 -2px 40px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.22);
+  padding:22px 24px 18px;
+  bottom:calc(var(--bar-bot) + 66px);
+}
+#todo-panel{
+  bottom:calc(var(--bar-bot) + 66px);
+  max-height:min(400px,52vh);
+  display:flex;flex-direction:column;gap:12px;
+  /* no background, border or padding — pills float freely */
+  background:none;border:none;padding:0;
+}
+#amb-panel.hidden,#todo-panel.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(14px)}
+
 /* ── Panel internals ── */
-.ap-head,.td-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.ap-title,.td-title{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase}
-.ap-close,.td-close{background:none;border:none;color:rgba(255,255,255,.32);font-size:14px;cursor:pointer;padding:4px;line-height:1}
-.ap-close:hover,.td-close:hover{color:rgba(255,255,255,.8)}
-.ap-row{display:flex;flex-direction:column;gap:4px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.ap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.ap-title{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--g-ink3);text-transform:uppercase}
+.ap-close,.td-close{display:none}
+.ap-row{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 .ap-row:last-child{border-bottom:none}
-.ap-lbl{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6)}
-.ap-val{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.32);min-width:32px;text-align:right}
-input[type=range]{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.18);border-radius:4px;margin-top:8px;outline:none;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
-.ap-reset{margin-top:10px;width:100%;padding:7px;border-radius:8px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.45);cursor:pointer;transition:background .15s}
-.ap-reset:hover{background:rgba(255,255,255,.13);color:rgba(255,255,255,.8)}
+.ap-lbl{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--g-ink2)}
+.ap-val{font-family:var(--mono);font-size:10px;color:var(--g-ink3);min-width:32px;text-align:right}
+input[type=range]{width:100%;height:2px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.25);border-radius:4px;margin-top:10px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;border:none;box-shadow:0 1px 6px rgba(0,0,0,.3)}
+.ap-reset{margin-top:14px;width:100%;padding:9px;border-radius:12px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--g-ink3);cursor:pointer;transition:background .12s,color .12s}
+.ap-reset:hover{background:rgba(255,255,255,.2);color:var(--g-ink)}
+
 /* ── Task list ── */
-#todo-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:4px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;-webkit-overflow-scrolling:touch}
-.td-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);transition:background .15s;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.td-item:hover{background:rgba(255,255,255,.08)}
-.td-item.done{opacity:.38}
+#todo-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;-webkit-overflow-scrolling:touch;padding-right:2px}
+.td-item{
+  display:flex;align-items:center;gap:14px;padding:14px 20px;
+  border-radius:50px;cursor:pointer;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+  transition:background .2s,transform .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.td-item:hover{background:rgba(255,255,255,.12);transform:translateX(2px)}
+.td-item.done{opacity:.45}
 .td-item.done .td-text{text-decoration:line-through}
-.td-check{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,.22);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
-.td-item.done .td-check{background:#4a9a5a;border-color:#4a9a5a}
-.td-text{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.75);flex:1;word-break:break-word;line-height:1.4}
-.td-del{background:none;border:none;color:rgba(255,255,255,.18);font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;transition:color .15s;-webkit-tap-highlight-color:transparent}
-.td-del:hover,.td-del:active{color:rgba(255,80,80,.85)}
-/* ── Bottom task bar ── */
+.td-check{
+  width:20px;height:20px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.5);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:all .22s;color:#fff;font-size:11px;
+}
+.td-item.done .td-check{background:var(--g-green);border-color:var(--g-green)}
+.td-text{font-family:var(--mono);font-size:12px;color:var(--g-ink);flex:1;word-break:break-word;line-height:1.5}
+.td-del{background:none;border:none;color:var(--g-ink3);font-size:15px;cursor:pointer;padding:3px 5px;flex-shrink:0;transition:color .12s;-webkit-tap-highlight-color:transparent}
+.td-del:hover,.td-del:active{color:rgba(255,100,100,.9)}
+
+/* ── Unified task bar ── */
 #task-bar{
-  position:fixed;bottom:max(16px,env(safe-area-inset-bottom,16px));left:50%;transform:translateX(-50%);
-  width:min(620px,calc(100vw - 32px));
-  background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  border:1px solid var(--glass-border);border-radius:14px;padding:12px 16px 10px;
-  z-index:900;box-shadow:var(--glass-shadow);
+  position:fixed;
+  bottom:var(--bar-bot);
+  left:50%;transform:translateX(-50%);
+  width:var(--bar-w);
+  background:rgba(20,22,28,.72);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border:1px solid var(--g-border);
+  border-radius:16px;
+  box-shadow:var(--g-shadow);
+  display:flex;align-items:center;
+  height:56px;padding:0 6px;
+  z-index:900;
 }
-#task-bar-inner{display:flex;align-items:center;gap:8px}
-#task-bar input{flex:1;background:none;border:none;outline:none;font-family:var(--mono);font-size:14px;color:rgba(255,255,255,.85);caret-color:rgba(255,200,100,.9);-webkit-appearance:none}
-#task-bar input::placeholder{color:rgba(255,255,255,.2)}
+#todo-fab,#amb-fab{
+  flex-shrink:0;width:46px;height:44px;
+  background:none;border:none;
+  color:var(--g-ink3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r);
+  transition:color .12s,background .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+#todo-fab:hover,#amb-fab:hover{color:var(--g-ink);background:rgba(255,255,255,.1)}
+#todo-fab:active,#amb-fab:active{background:rgba(255,255,255,.18)}
+.bar-divider{width:1px;height:22px;background:rgba(255,255,255,.15);flex-shrink:0}
+#task-input{
+  flex:1;background:none;border:none;outline:none;
+  font-family:var(--mono);font-size:14px;
+  color:var(--g-ink);caret-color:var(--g-green);
+  padding:0 14px;-webkit-appearance:none;min-width:0;
+}
+#task-input::placeholder{color:var(--g-ink3);font-style:italic}
 #task-submit{
-  display:none;width:30px;height:30px;flex-shrink:0;border-radius:8px;
-  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.13);
-  color:rgba(255,255,255,.6);cursor:pointer;align-items:center;justify-content:center;
-  transition:background .15s;-webkit-tap-highlight-color:transparent;
+  display:none;flex-shrink:0;width:34px;height:34px;
+  border-radius:12px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.12);color:var(--g-ink2);cursor:pointer;
+  align-items:center;justify-content:center;
+  transition:background .12s;margin-right:4px;
+  -webkit-tap-highlight-color:transparent;
 }
-#task-submit:active{background:rgba(255,255,255,.2);color:#fff}
-#task-bar-hint{margin-top:8px;font-family:var(--mono);font-size:10px;letter-spacing:.07em;color:rgba(255,255,255,.2);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
-#task-bar-hint span{display:flex;gap:12px;align-items:center}
-.tbh-key{display:inline-block;border:1px solid rgba(255,255,255,.16);border-radius:4px;padding:1px 5px;font-size:9px;color:rgba(255,255,255,.3);background:rgba(255,255,255,.04)}
+#task-submit:active{background:rgba(255,255,255,.24)}
+
 /* ── Mobile ── */
-@media (max-width:600px){
-  #task-bar{width:calc(100vw - 24px);bottom:max(12px,env(safe-area-inset-bottom,12px));padding:12px 12px 10px;border-radius:12px}
-  #task-bar input{font-size:16px}
+@media (max-width:640px){
+  :root{--bar-bot:max(20px,env(safe-area-inset-bottom,20px))}
+  #task-bar{height:52px;border-radius:14px;padding:0 4px;width:calc(100vw - 24px);--bar-w:calc(100vw - 24px)}
+  #task-input{font-size:16px;padding:0 10px}
   #task-submit{display:flex}
-  #task-bar-hint{display:none}
-  #amb-fab,#todo-fab{height:40px;padding:0 12px;bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 68px)}
-  .fab-label{display:none}
-  #amb-fab{right:12px}
-  #todo-fab{left:12px}
-  #todo-panel{left:12px;right:12px;width:auto;bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 68px + 48px);max-height:min(300px,50vh)}
-  #amb-panel{left:12px;right:12px;width:auto;bottom:calc(max(12px,env(safe-area-inset-bottom,12px)) + 68px + 48px)}
-  .td-item{padding:10px}
+  #todo-fab,#amb-fab{width:42px;height:40px}
+  #amb-panel{width:calc(100vw - 24px);padding:18px 18px 16px}
+  #todo-panel{width:calc(100vw - 24px);max-height:min(320px,52vh)}
+  .td-item{padding:12px 14px}
   .td-check{width:22px;height:22px}
-  .td-del{font-size:18px;padding:4px 6px}
   .td-text{font-size:13px}
-  #time-badge{font-size:11px;padding:4px 10px;max-width:calc(100vw - 24px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #time-badge{font-size:10px;padding:5px 12px;max-width:calc(100vw - 32px)}
 }
+
 /* ── Tooltip ── */
 #lamp-tooltip{
   position:fixed;pointer-events:none;z-index:999;
-  background:rgba(10,12,18,.88);backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,.15);border-radius:8px;
-  padding:7px 12px;font-size:13px;color:rgba(255,255,255,.92);
-  max-width:min(220px,70vw);line-height:1.4;
-  box-shadow:0 4px 16px rgba(0,0,0,.5);transition:opacity .1s;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.15);border-radius:var(--r);
+  padding:8px 13px;font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.88);
+  max-width:min(240px,72vw);line-height:1.5;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);transition:opacity .1s;
 }
 #lamp-tooltip.hidden{opacity:0}
 </style>
@@ -130,42 +175,35 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <div id="lamp-tooltip" class="hidden"></div>
 <div id="time-badge">☀️ Day</div>
 
-<!-- Ambience FAB -->
-<button id="amb-fab" title="Ambience">
-  <span class="fab-icon">◎</span>
-  <span class="fab-label">ambience</span>
-</button>
+<div id="todo-panel" class="hidden"><div id="todo-list"></div></div>
 
-<!-- Tasks FAB -->
-<button id="todo-fab" title="Tasks">
-  <span class="fab-icon">❧</span>
-  <span class="fab-label">tasks</span>
-</button>
-<div id="todo-panel" class="hidden">
-  <div class="td-head">
-    <span class="td-title">Tasks</span>
-    <button class="td-close" id="td-close">✕</button>
-  </div>
-  <div id="todo-list"></div>
-</div>
 <div id="task-bar">
-  <div id="task-bar-inner">
-    <input id="task-input" type="text" placeholder="plant a new task…" maxlength="120" autocomplete="off" spellcheck="false">
-    <button id="task-submit" title="Add task">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M5 12h14M12 5l7 7-7 7"/>
-      </svg>
-    </button>
-  </div>
-  <div id="task-bar-hint">
-    <span>PRESS ENTER TO PLANT · TAB TO VIEW TASKS</span>
-    <span><span class="tbh-key">enter</span> / <span class="tbh-key">tab</span></span>
-  </div>
+  <!-- Tasks icon button — left -->
+  <button id="todo-fab" title="Tasks">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 12l5 5L22 4"/><path d="M2 19l5 5L22 11" opacity=".45"/>
+    </svg>
+  </button>
+  <div class="bar-divider"></div>
+  <!-- Text input -->
+  <input id="task-input" type="text" placeholder="plant a new task…" maxlength="120" autocomplete="off" spellcheck="false">
+  <!-- Submit — mobile only -->
+  <button id="task-submit" title="Add task">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12h14M12 5l7 7-7 7"/>
+    </svg>
+  </button>
+  <div class="bar-divider"></div>
+  <!-- Ambience icon button — right -->
+  <button id="amb-fab" title="Ambience">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2a5 5 0 0 1 5 5c0 5-5 11-5 11S7 12 7 7a5 5 0 0 1 5-5z"/><circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none"/>
+    </svg>
+  </button>
 </div>
 <div id="amb-panel" class="hidden">
   <div class="ap-head">
     <span class="ap-title">Ambience</span>
-    <button class="ap-close" id="ap-close">✕</button>
   </div>
   <div id="ap-rows"></div>
   <button class="ap-reset" id="ap-reset">Reset</button>
@@ -692,10 +730,7 @@ createLanternString(3,0,0,16,IS_MOBILE?3:5,7);
 createLanternString(3,0,6,-16,IS_MOBILE?3:5,7);
 
 // Firepit
-createFirepit(-12,2);
 
-// Dock
-createDock(24,-20,2.3);
 
 // Tiki torches — dock
 [[24.8,-20.9],[23.2,-19.1],[22.2,-23.2],[20.6,-21.4]].forEach(([x,z])=>createTikiTorch(x,z));
@@ -728,8 +763,15 @@ document.getElementById('ap-reset').addEventListener('click',()=>{
   applyTime();
 });
 const fab=document.getElementById('amb-fab'), panel=document.getElementById('amb-panel');
-fab.addEventListener('click',()=>panel.classList.toggle('hidden'));
-document.getElementById('ap-close').addEventListener('click',()=>panel.classList.add('hidden'));
+fab.addEventListener('click', e=>{
+  e.stopPropagation();
+  const opening = panel.classList.contains('hidden');
+  // close both first
+  panel.classList.add('hidden');
+  document.getElementById('todo-panel').classList.add('hidden');
+  if(opening) panel.classList.remove('hidden');
+});
+// close button removed
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 applyTime();
@@ -858,8 +900,23 @@ canvas.addEventListener('pointerdown', ()=> taskInput.blur());
 document.getElementById('task-submit').addEventListener('click', addTodo);
 const todoFab = document.getElementById('todo-fab');
 const todoPanel = document.getElementById('todo-panel');
-todoFab.addEventListener('click',()=>todoPanel.classList.toggle('hidden'));
-document.getElementById('td-close').addEventListener('click',()=>todoPanel.classList.add('hidden'));
+todoFab.addEventListener('click', e=>{
+  e.stopPropagation();
+  const opening = todoPanel.classList.contains('hidden');
+  todoPanel.classList.add('hidden');
+  panel.classList.add('hidden');
+  if(opening) todoPanel.classList.remove('hidden');
+});
+// close button removed
+
+// Click anywhere outside panels dismisses whichever is open
+document.addEventListener('click', ()=>{
+  panel.classList.add('hidden');
+  todoPanel.classList.add('hidden');
+});
+// Prevent clicks inside panels from bubbling up
+document.getElementById('amb-panel').addEventListener('click', e=>e.stopPropagation());
+document.getElementById('todo-panel').addEventListener('click', e=>e.stopPropagation());
 
 renderTodos();
 buildStrips();
