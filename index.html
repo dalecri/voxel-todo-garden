@@ -25,55 +25,105 @@ body{overflow:hidden;background:#000}
 }
 
 /* ── Time badge ── */
+/* ── Gooey wrapper — merges badge & panel edges during transition ── */
+#goo-wrap{
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  z-index:902; pointer-events:none;
+}
+#goo-wrap.goo-active{ filter:blur(10px) contrast(28); }
+#time-badge{ pointer-events:auto; }
+#amb-panel:not(.hidden){ pointer-events:auto; }
+/* Inner content needs its own un-blurred layer so text stays crisp,
+   filter only applies to shape silhouettes via this wrapper */
 #time-badge{
   position:fixed;top:16px;left:50%;transform:translateX(-50%);
-  background:rgba(255,255,255,.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border:1px solid rgba(0,0,0,.1);border-radius:24px;
-  padding:6px 18px;font-size:11px;color:rgba(10,12,18,.65);
-  pointer-events:none;letter-spacing:.06em;z-index:100;
+  background:rgba(20,22,28,.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.12);border-radius:24px;
+  padding:6px 18px;font-size:11px;color:rgba(255,255,255,.92);
+  pointer-events:auto;letter-spacing:.06em;
   white-space:nowrap;font-family:var(--mono);
   max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;text-align:center;
+  cursor:pointer;transition:background .15s, transform .35s cubic-bezier(.34,1.4,.64,1);
 }
+#time-badge:hover{background:rgba(30,33,42,.7)}
+#time-badge.goo-pulse{transform:translateX(-50%) scale(.96)}
 
-/* ── Panels — glass, slide up from bar centre ── */
-#amb-panel,#todo-panel{
+/* ── Todo panel — slides up from bottom bar centre ── */
+#todo-panel{
   position:fixed;z-index:901;
   left:50%;transform:translateX(-50%) translateY(0);
   width:var(--bar-w);
   transition:opacity .22s cubic-bezier(.16,1,.3,1), transform .22s cubic-bezier(.16,1,.3,1);
   transform-origin:bottom center;
-}
-#amb-panel{
-  background:rgba(20,22,28,.68);
-  backdrop-filter:blur(28px) saturate(140%);
-  -webkit-backdrop-filter:blur(28px) saturate(140%);
-  border:1px solid var(--g-border);
-  border-radius:18px;
-  box-shadow:0 -2px 40px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.22);
-  padding:22px 24px 18px;
-  bottom:calc(var(--bar-bot) + 66px);
-}
-#todo-panel{
   bottom:calc(var(--bar-bot) + 66px);
   max-height:min(400px,52vh);
   display:flex;flex-direction:column;gap:12px;
-  /* no background, border or padding — pills float freely */
   background:none;border:none;padding:0;
 }
-#amb-panel.hidden,#todo-panel.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(14px)}
+#todo-panel.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(14px)}
+
+/* ── Ambience panel — drops down from the time badge, gooey pull-away ── */
+#amb-panel{
+  position:fixed;z-index:901;
+  top:60px;left:50%;
+  transform:translateX(-50%) translateY(0) scale(1);
+  width:min(300px,calc(100vw - 32px));
+  transition:opacity .38s cubic-bezier(.32,1.6,.5,1), transform .38s cubic-bezier(.32,1.6,.5,1);
+  transform-origin:top center;
+  background:rgba(20,22,28,.55);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:24px;
+  padding:14px 22px 12px;
+}
+#amb-panel.hidden{
+  opacity:0;pointer-events:none;
+  transform:translateX(-50%) translateY(-46px) scale(.35);
+}
+/* Content fades in slightly delayed so it doesn't appear mid-blob */
+#amb-panel .ap-head,#amb-panel #ap-rows,#amb-panel .ap-reset{
+  transition:opacity .15s ease .12s;
+}
+#amb-panel.hidden .ap-head,#amb-panel.hidden #ap-rows,#amb-panel.hidden .ap-reset{
+  opacity:0; transition:opacity .08s ease;
+}
 
 /* ── Panel internals ── */
-.ap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.ap-title{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:rgba(10,12,18,.38);text-transform:uppercase}
-.ap-close,.td-close{display:none}
-.ap-row{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.ap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ap-title{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:rgba(255,255,255,.4);text-transform:uppercase}
+.ap-row{display:flex;flex-direction:column;gap:6px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 .ap-row:last-child{border-bottom:none}
-.ap-lbl{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:11px;color:rgba(10,12,18,.65)}
-.ap-val{font-family:var(--mono);font-size:10px;color:rgba(10,12,18,.38);min-width:32px;text-align:right}
-input[type=range]{width:100%;height:2px;-webkit-appearance:none;appearance:none;background:rgba(0,0,0,.15);border-radius:4px;margin-top:10px;outline:none;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;border:none;box-shadow:0 1px 6px rgba(0,0,0,.3)}
-.ap-reset{margin-top:14px;width:100%;padding:9px;border-radius:12px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;background:rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.1);color:rgba(10,12,18,.45);cursor:pointer;transition:background .12s,color .12s}
-.ap-reset:hover{background:rgba(0,0,0,.1);color:rgba(10,12,18,.85)}
+.ap-lbl{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.8)}
+.ap-val{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);min-width:34px;text-align:right}
+.ap-segs{display:flex;gap:4px;touch-action:none;-webkit-tap-highlight-color:transparent;cursor:pointer}
+.ap-seg{
+  flex:1;height:14px;border-radius:4px;
+  background:rgba(255,255,255,.1);
+  transition:background .12s, transform .12s;
+}
+.ap-seg.filled{background:var(--seg-color,#ffd27a)}
+.ap-seg.peak{box-shadow:0 0 8px var(--seg-color,#ffd27a)}
+.ap-segs:active .ap-seg{transform:scaleY(1.15)}
+.ap-toggle{
+  width:34px;height:19px;border-radius:10px;
+  background:rgba(255,255,255,.12);border:none;
+  cursor:pointer;position:relative;flex-shrink:0;
+  transition:background .18s;-webkit-tap-highlight-color:transparent;
+}
+.ap-toggle.on{background:#9fc3e8}
+.ap-toggle-knob{
+  position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);
+  transition:transform .18s cubic-bezier(.4,0,.2,1);
+}
+.ap-toggle.on .ap-toggle-knob{transform:translateX(15px)}
+.ap-reset{
+  margin-top:10px;width:100%;padding:7px;border-radius:10px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.5);cursor:pointer;transition:background .12s,color .12s;
+}
+.ap-reset:hover{background:rgba(255,255,255,.16);color:rgba(255,255,255,.9)}
 
 /* ── Task list ── */
 #todo-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;-webkit-overflow-scrolling:touch;padding-right:2px}
@@ -95,7 +145,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
   transition:all .22s;color:#fff;font-size:11px;
 }
 .td-item.done .td-check{background:var(--g-green);border-color:var(--g-green);color:#fff}
-.td-text{font-family:var(--mono);font-size:12px;color:var(--g-ink);flex:1;word-break:break-word;line-height:1.4}
+.td-text{font-family:var(--mono);font-size:12px;color:var(--g-ink);flex:1;word-break:break-word;line-height:1.4;text-shadow:0 1px 3px rgba(255,255,255,.5)}
 .td-body{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
 .td-date{font-family:var(--mono);font-size:10px;color:rgba(10,12,18,.62);letter-spacing:.02em;text-shadow:0 1px 2px rgba(255,255,255,.4)}
 .td-del{background:none;border:none;color:rgba(10,12,18,.3);font-size:15px;cursor:pointer;padding:3px 5px;flex-shrink:0;transition:color .12s;-webkit-tap-highlight-color:transparent}
@@ -116,7 +166,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
   height:56px;padding:0 6px;
   z-index:900;
 }
-#todo-fab,#amb-fab{
+#todo-fab,#eye-fab{
   flex-shrink:0;width:46px;height:44px;
   background:none;border:none;
   color:rgba(255,255,255,.70);cursor:pointer;
@@ -125,8 +175,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
   transition:color .12s,background .12s;
   -webkit-tap-highlight-color:transparent;
 }
-#todo-fab:hover,#amb-fab:hover{color:rgba(255,255,255,.95);background:rgba(255,255,255,.08)}
-#todo-fab:active,#amb-fab:active{background:rgba(0,0,0,.1)}
+#todo-fab:hover,#eye-fab:hover{color:rgba(255,255,255,.95);background:rgba(255,255,255,.08)}
+#todo-fab:active,#eye-fab:active{background:rgba(0,0,0,.1)}
+#eye-fab.active{color:#ffd27a}
+#eye-fab.active:hover{color:#ffdd99}
 .bar-divider{width:1px;height:22px;background:rgba(0,0,0,.15);flex-shrink:0}
 #task-input{
   flex:1;background:none;border:none;outline:none;
@@ -151,7 +203,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
   #task-bar{height:52px;border-radius:14px;padding:0 4px;width:calc(100vw - 24px);--bar-w:calc(100vw - 24px)}
   #task-input{font-size:16px;padding:0 10px}
   #task-submit{display:flex}
-  #todo-fab,#amb-fab{width:42px;height:40px}
+  #todo-fab,#eye-fab{width:42px;height:40px}
   #amb-panel{width:calc(100vw - 24px);padding:18px 18px 16px}
   #todo-panel{width:calc(100vw - 24px);max-height:min(320px,52vh)}
   .td-item{padding:12px 14px}
@@ -170,23 +222,36 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
   box-shadow:0 4px 20px rgba(0,0,0,.3);transition:opacity .1s;
 }
 #lamp-tooltip.hidden{opacity:0}
+
+/* ── Persistent tree labels (eye toggle) ── */
+.tree-label{
+  position:fixed;z-index:998;pointer-events:none;
+  transform:translate(-50%,-100%);
+  background:rgba(0,0,0,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.15);border-radius:8px;
+  padding:5px 10px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.88);
+  white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;
+  box-shadow:0 4px 14px rgba(0,0,0,.3);
+}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="lamp-tooltip" class="hidden"></div>
-<div id="time-badge">☀️ Day</div>
+<div id="goo-wrap">
+  <div id="time-badge" title="Ambience settings">☀️ Day</div>
+  <div id="amb-panel" class="hidden">
+    <div class="ap-head">
+      <span class="ap-title">Ambience</span>
+    </div>
+    <div id="ap-rows"></div>
+    <button class="ap-reset" id="ap-reset">Reset</button>
+  </div>
+</div>
 
 <div id="todo-panel" class="hidden"><div id="todo-list"></div></div>
 
 <div id="task-bar">
-  <!-- Tasks icon button — left -->
-  <button id="todo-fab" title="Tasks">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M2 12l5 5L22 4"/><path d="M2 19l5 5L22 11" opacity=".45"/>
-    </svg>
-  </button>
-  <div class="bar-divider"></div>
   <!-- Text input -->
   <input id="task-input" type="text" placeholder="plant a new task…" maxlength="120" autocomplete="off" spellcheck="false">
   <!-- Submit — mobile only -->
@@ -196,19 +261,20 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
     </svg>
   </button>
   <div class="bar-divider"></div>
-  <!-- Ambience icon button — right -->
-  <button id="amb-fab" title="Ambience">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 2a5 5 0 0 1 5 5c0 5-5 11-5 11S7 12 7 7a5 5 0 0 1 5-5z"/><circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none"/>
+  <!-- Eye toggle — show/hide all tree labels persistently -->
+  <button id="eye-fab" title="Show all task labels">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>
+      <line id="eye-slash" x1="3" y1="3" x2="21" y2="21" style="display:none"/>
     </svg>
   </button>
-</div>
-<div id="amb-panel" class="hidden">
-  <div class="ap-head">
-    <span class="ap-title">Ambience</span>
-  </div>
-  <div id="ap-rows"></div>
-  <button class="ap-reset" id="ap-reset">Reset</button>
+  <div class="bar-divider"></div>
+  <!-- Tasks icon button — right -->
+  <button id="todo-fab" title="Tasks">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 12l5 5L22 4"/><path d="M2 19l5 5L22 11" opacity=".45"/>
+    </svg>
+  </button>
 </div>
 
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/controls/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/"}}</script>
@@ -273,7 +339,7 @@ nightFill2.position.set(-10, 14, -10);
 scene.add(nightFill2);
 
 // ── Ambience settings ─────────────────────────────────────────────────────────
-const AMB = { brightness: 1.0, fogDensity: 1.0 };
+const AMB = { brightness: 1.0, fogDensity: 1.0, rain: false, wind: false };
 const FOG_BASE = 0.004;
 
 // ── Terrain helpers ───────────────────────────────────────────────────────────
@@ -518,6 +584,7 @@ function buildTaskTrees(){
       spawnTaskTree(nx, nz, t);   // pending → full tree
     }
   });
+  buildPersistentLabels(); // refresh eye-toggle labels to match current trees
 }
 
 // ── Hover / tooltip ───────────────────────────────────────────────────────────
@@ -526,7 +593,59 @@ const mouse = new THREE.Vector2();
 let hoveredTree = null;
 const tooltip = document.getElementById('lamp-tooltip');
 
+// ── Eye toggle — persistent labels for all trees ──────────────────────────────
+let labelsAlwaysOn = false;
+const persistentLabels = []; // { el, entry }
+
+function buildPersistentLabels(){
+  // Remove old label elements
+  persistentLabels.forEach(p=>p.el.remove());
+  persistentLabels.length = 0;
+  if(!labelsAlwaysOn) return;
+
+  taskTrees.forEach(entry=>{
+    const el = document.createElement('div');
+    el.className = 'tree-label';
+    el.textContent = '🌸 ' + entry.todo.text;
+    document.body.appendChild(el);
+    persistentLabels.push({el, entry});
+  });
+}
+
+function updatePersistentLabelPositions(){
+  if(!labelsAlwaysOn || persistentLabels.length===0) return;
+  const v = new THREE.Vector3();
+  persistentLabels.forEach(({el, entry})=>{
+    v.set(entry.group.position.x, entry.group.position.y + 5.2, entry.group.position.z);
+    v.project(camera);
+    const behindCamera = v.z > 1;
+    const x = (v.x*.5+.5)*innerWidth;
+    const y = (-v.y*.5+.5)*innerHeight;
+    if(behindCamera || x<-100 || x>innerWidth+100 || y<-100 || y>innerHeight+100){
+      el.style.display='none';
+    } else {
+      el.style.display='block';
+      el.style.left = x+'px';
+      el.style.top  = y+'px';
+    }
+  });
+}
+
+const eyeFab = document.getElementById('eye-fab');
+const eyeSlash = document.getElementById('eye-slash');
+eyeFab.addEventListener('click', e=>{
+  e.stopPropagation();
+  labelsAlwaysOn = !labelsAlwaysOn;
+  eyeFab.classList.toggle('active', labelsAlwaysOn);
+  eyeSlash.style.display = labelsAlwaysOn ? 'inline' : 'none';
+  eyeFab.title = labelsAlwaysOn ? 'Hide all task labels' : 'Show all task labels';
+  buildPersistentLabels();
+  updatePersistentLabelPositions();
+});
+
 function onPointerMove(e){
+  // Skip hover-tooltip logic entirely while persistent labels are on
+  if(labelsAlwaysOn){ tooltip.classList.add('hidden'); return; }
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
   const clientY = e.touches ? e.touches[0].clientY : e.clientY;
   mouse.x = (clientX / innerWidth)  *  2 - 1;
@@ -580,6 +699,9 @@ function createTikiTorch(x,z){
 }
 
 // ── Red lantern string (emissive only) ────────────────────────────────────────
+// Lantern groups registered here so wind can swing them in unison
+const lanternGroups = []; // { group, pivotY, phase }
+
 function createLanternString(ax,az,bx,bz,count=5,h=7){
   const postMat=new THREE.MeshStandardMaterial({color:'#2a2218',roughness:.8});
   const ropeMat=new THREE.MeshStandardMaterial({color:'#3a3020',roughness:.95});
@@ -624,26 +746,40 @@ function createLanternString(ax,az,bx,bz,count=5,h=7){
     const {x,y,z}=pts[i];
     const lg=new THREE.Group();
     const body=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.9,8),EMIT.lanternBody);
-    const topC=new THREE.Mesh(new THREE.CylinderGeometry(.22,.38,.18,8),postMat); topC.position.y=.54;
-    const botC=new THREE.Mesh(new THREE.CylinderGeometry(.38,.22,.18,8),postMat); botC.position.y=-.54;
-    const glw=new THREE.Mesh(new THREE.SphereGeometry(.26,6,6),EMIT.lanternGlow);
-    lg.add(body,topC,botC,glw);
-    lg.position.set(x,y-.95,z);
+    body.position.y=-.95;
+    const topC=new THREE.Mesh(new THREE.CylinderGeometry(.22,.38,.18,8),postMat); topC.position.y=-.41;
+    const botC=new THREE.Mesh(new THREE.CylinderGeometry(.38,.22,.18,8),postMat); botC.position.y=-1.49;
+    const glw=new THREE.Mesh(new THREE.SphereGeometry(.26,6,6),EMIT.lanternGlow); glw.position.y=-.95;
+    // Tiny string connecting rope to lantern top so the pivot reads visually
+    const stringMat=new THREE.MeshStandardMaterial({color:'#2a2218',roughness:.9});
+    const str_=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.4,4),stringMat); str_.position.y=-.2;
+    lg.add(body,topC,botC,glw,str_);
+    // Group sits AT the rope point — children are offset down — so rotating
+    // the group swings the whole lantern like a pendulum from the rope
+    lg.position.set(x,y,z);
     scene.add(lg);
+    lanternGroups.push({group:lg, pivotY:y, phase:Math.random()*Math.PI*2});
   }
 }
 
 // ── Bamboo grove (instanced) ──────────────────────────────────────────────────
+// Bamboo groves registered here so wind sway can animate them cheaply
+const bambooGroves = []; // { culmM, count, baseX:[], baseZ:[], baseY:[], baseH:[], phase:[] }
+
 function createBambooGrove(cx,cz,count=IS_MOBILE?8:18){
   const culmG=new THREE.CylinderGeometry(.12,.15,7,5);
   const nodeG=new THREE.CylinderGeometry(.18,.18,.2,5);
   const dummy=new THREE.Object3D();
   const culmM=new THREE.InstancedMesh(culmG,MAT.bam,count);
   const nodeM=new THREE.InstancedMesh(nodeG,MAT.bamDark,count*2);
+
+  const baseX=[],baseZ=[],baseY=[],baseH=[],phase=[];
   for(let i=0;i<count;i++){
     const a=Math.random()*Math.PI*2, r=Math.random()*4.5;
     const x=cx+Math.cos(a)*r, z=cz+Math.sin(a)*r;
     const y=getH(x,z), h=5+Math.random()*3;
+    baseX.push(x); baseZ.push(z); baseY.push(y); baseH.push(h);
+    phase.push(Math.random()*Math.PI*2);
     dummy.position.set(x,y+h/2,z); dummy.scale.set(1,h/7,1);
     dummy.rotation.set((Math.random()-.5)*.1,Math.random()*Math.PI*2,(Math.random()-.5)*.1);
     dummy.updateMatrix(); culmM.setMatrixAt(i,dummy.matrix);
@@ -654,6 +790,8 @@ function createBambooGrove(cx,cz,count=IS_MOBILE?8:18){
   }
   culmM.instanceMatrix.needsUpdate=nodeM.instanceMatrix.needsUpdate=true;
   scene.add(culmM,nodeM);
+
+  bambooGroves.push({culmM, count, baseX, baseZ, baseY, baseH, phase});
 }
 
 // ── Simple tree (no per-tree light, no petals) ────────────────────────────────
@@ -715,6 +853,55 @@ function createDock(x,z,angle=0){
   scene.add(g);
 }
 
+// ── Wind sock — fills out and points downwind when wind is toggled on ─────────
+let windSock = null;
+function createWindSock(x,z){
+  const y=getH(x,z);
+  const group=new THREE.Group();
+
+  const poleMat=new THREE.MeshStandardMaterial({color:'#5a3c20',roughness:.9});
+  const ringMat=new THREE.MeshStandardMaterial({color:'#d8d4c8',roughness:.7});
+  const stripeA=new THREE.MeshStandardMaterial({color:'#e8501a',emissive:'#8a2a0a',emissiveIntensity:.15,roughness:.85});
+  const stripeB=new THREE.MeshStandardMaterial({color:'#f0eee6',emissive:'#888278',emissiveIntensity:.1,roughness:.85});
+
+  // Pole
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,3.2,6),poleMat);
+  pole.position.y=1.6; group.add(pole);
+  // Mount ring at top — sock hangs from here, oriented so its hole faces along Z
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.16,.03,5,10),ringMat);
+  ring.position.y=3.15; group.add(ring);
+
+  // Sock body — a CHAIN of pivot groups, each holding one tapered tube segment.
+  // Each pivot rotates independently so the whole sock can droop straight down
+  // when calm, or swing up toward horizontal (pointing downwind) when windy —
+  // exactly like a real beach windsock filling with air.
+  const SEG_COUNT=5;
+  const pivots=[]; // one Object3D per segment, chained parent->child
+  let parent=group;
+  let attachY=3.15; // start at the ring
+  for(let i=0;i<SEG_COUNT;i++){
+    const t0=i/SEG_COUNT, t1=(i+1)/SEG_COUNT;
+    const r0=.20*(1-t0*.65), r1=.20*(1-t1*.65); // tapers toward the tail
+    const segLen=.55;
+
+    // Pivot sits at the attach point; segment mesh hangs/extends from it along -Y locally,
+    // then we rotate the WHOLE pivot to point the segment in any direction we want
+    const pivot=new THREE.Group();
+    pivot.position.y = (i===0) ? attachY : segLen; // first pivot at ring, rest chained by parent's local offset
+    const segGeo=new THREE.CylinderGeometry(r1,r0,segLen,8,1,true);
+    segGeo.translate(0,-segLen/2,0); // shift so geometry extends downward from the pivot's origin
+    const seg=new THREE.Mesh(segGeo, i%2===0?stripeA:stripeB);
+    pivot.add(seg);
+    parent.add(pivot);
+    pivots.push(pivot);
+    parent=pivot;
+  }
+
+  group.position.set(x,y,z);
+  scene.add(group);
+  windSock = {group, pivots};
+}
+
 // ── Rocks (instanced) ─────────────────────────────────────────────────────────
 function createRocks(){
   const rockMat=new THREE.MeshStandardMaterial({color:'#7a7a72',roughness:.95});
@@ -771,9 +958,9 @@ function applyTime(){
   // Exposure — significantly brighter at night
   renderer.toneMappingExposure=(1.1 + day*.2) * AMB.brightness;
   // UI panel opacity — aggressive during day so text is always readable
-  const panelAlpha = (0.72 + day * 0.14).toFixed(2);
-  const barAlpha   = (0.75 + day * 0.12).toFixed(2);
-  const panelBg = `rgba(14,16,22,${panelAlpha})`;
+  const panelAlpha = (0.55 + day * 0.18).toFixed(2);
+  const barAlpha   = (0.72 + day * 0.15).toFixed(2);
+  const panelBg = `rgba(20,22,28,${panelAlpha})`;
   const barBg   = `rgba(14,16,22,${barAlpha})`;
   const ambPanel = document.getElementById('amb-panel');
   const todPanel = document.getElementById('todo-panel');
@@ -781,8 +968,10 @@ function applyTime(){
   if(todPanel) todPanel.style.background = 'none';
   const taskBar = document.getElementById('task-bar');
   if(taskBar) taskBar.style.background = barBg;
+  const badgeEl = document.getElementById('time-badge');
+  if(badgeEl) badgeEl.style.background = panelBg;
   // Task pill items — near-opaque during day
-  const itemAlpha = (0.12 + day * 0.22).toFixed(2);
+  const itemAlpha = (0.62 + day * 0.22).toFixed(2);
   const tdStyle = document.getElementById('td-item-style') || (()=>{
     const el=document.createElement('style');el.id='td-item-style';document.head.appendChild(el);return el;
   })();
@@ -820,6 +1009,9 @@ createLanternString(3,0,6,-16,IS_MOBILE?3:5,7);
 // Firepit
 
 
+// Wind sock — beach near the dock torches
+createWindSock(12, -16);
+
 // Tiki torches — dock
 [[24.8,-20.9],[23.2,-19.1],[22.2,-23.2],[20.6,-21.4]].forEach(([x,z])=>createTikiTorch(x,z));
 // Tiki torches — shore torii
@@ -827,37 +1019,137 @@ createLanternString(3,0,6,-16,IS_MOBILE?3:5,7);
 // Beach perimeter — pulled inward from edge
 (IS_MOBILE?[[-21,16],[-26,-6],[6,-26],[0,27]]:[[-21,16],[-16,21],[-26,-6],[-25,-9],[6,-26],[9,-25],[0,27],[6,26],[0,-27]]).forEach(([x,z])=>createTikiTorch(x,z));
 
-// ── Ambience panel ────────────────────────────────────────────────────────────
+// ── Ambience panel — simple sliders ────────────────────────────────────────────
+const SEGS_COUNT = 8;
 const SLIDERS=[
-  {key:'brightness',label:'☀️ Brightness',min:.2,max:2,step:.05,fmt:v=>Math.round(v*100)+'%'},
-  {key:'fogDensity', label:'🌫 Fog',        min:.1,max:4, step:.1, fmt:v=>v.toFixed(1)+'×'},
+  {key:'brightness', label:'Brightness', min:.2, max:2,  fmt:v=>Math.round(v*100)+'%', color:'#ffd27a'},
+  {key:'fogDensity',  label:'Fog',         min:.1, max:4,  fmt:v=>v.toFixed(1)+'×',      color:'#9fc3e8'},
 ];
 const defaults={...AMB};
 const apRows=document.getElementById('ap-rows');
-SLIDERS.forEach(({key,label,min,max,step,fmt})=>{
+
+function valToSegCount(val,min,max){
+  return Math.max(1, Math.min(SEGS_COUNT, Math.round(((val-min)/(max-min))*SEGS_COUNT)));
+}
+function segCountToVal(n,min,max){
+  return min + (n/SEGS_COUNT)*(max-min);
+}
+
+SLIDERS.forEach(({key,label,min,max,fmt,color})=>{
   const row=document.createElement('div'); row.className='ap-row';
-  row.innerHTML=`<div class="ap-lbl"><span>${label}</span><span class="ap-val" id="v-${key}">${fmt(AMB[key])}</span></div>
-    <input type="range" min="${min}" max="${max}" step="${step}" value="${AMB[key]}" id="s-${key}">`;
+  const filled = valToSegCount(AMB[key],min,max);
+
+  let segsHTML='';
+  for(let i=0;i<SEGS_COUNT;i++){
+    segsHTML+=`<div class="ap-seg${i<filled?' filled':''}${i===filled-1?' peak':''}" data-i="${i}"></div>`;
+  }
+
+  row.innerHTML=`
+    <div class="ap-lbl">
+      <span>${label}</span>
+      <span class="ap-val" id="v-${key}">${fmt(AMB[key])}</span>
+    </div>
+    <div class="ap-segs" id="segs-${key}" style="--seg-color:${color}">${segsHTML}</div>`;
   apRows.appendChild(row);
-  row.querySelector('input').addEventListener('input',e=>{
-    AMB[key]=parseFloat(e.target.value);
-    document.getElementById('v-'+key).textContent=fmt(AMB[key]);
+
+  const segsEl = row.querySelector('.ap-segs');
+
+  function setFromClientX(clientX){
+    const rect = segsEl.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const n = Math.max(1, Math.min(SEGS_COUNT, Math.ceil(ratio * SEGS_COUNT)));
+    AMB[key] = segCountToVal(n, min, max);
+    document.getElementById('v-'+key).textContent = fmt(AMB[key]);
+    [...segsEl.children].forEach((seg,i)=>{
+      seg.classList.toggle('filled', i < n);
+      seg.classList.toggle('peak', i === n-1);
+    });
     applyTime();
-  });
+  }
+
+  let dragging=false;
+  segsEl.addEventListener('pointerdown', e=>{ dragging=true; segsEl.setPointerCapture(e.pointerId); setFromClientX(e.clientX); });
+  segsEl.addEventListener('pointermove', e=>{ if(dragging) setFromClientX(e.clientX); });
+  segsEl.addEventListener('pointerup',   ()=>{ dragging=false; });
+  segsEl.addEventListener('pointercancel',()=>{ dragging=false; });
 });
-document.getElementById('ap-reset').addEventListener('click',()=>{
+
+// ── Rain toggle row ──────────────────────────────────────────────────────────
+const rainRow=document.createElement('div'); rainRow.className='ap-row';
+rainRow.innerHTML=`
+  <div class="ap-lbl">
+    <span>Rain</span>
+    <button class="ap-toggle" id="rain-toggle" role="switch" aria-checked="${AMB.rain}">
+      <span class="ap-toggle-knob"></span>
+    </button>
+  </div>`;
+apRows.appendChild(rainRow);
+const rainToggleBtn = document.getElementById('rain-toggle');
+rainToggleBtn.classList.toggle('on', AMB.rain);
+rainToggleBtn.addEventListener('click', ()=>{
+  AMB.rain = !AMB.rain;
+  rainToggleBtn.classList.toggle('on', AMB.rain);
+  rainToggleBtn.setAttribute('aria-checked', AMB.rain);
+  rainMesh.visible = AMB.rain;
+});
+
+// ── Wind toggle row ──────────────────────────────────────────────────────────
+const windRow=document.createElement('div'); windRow.className='ap-row';
+windRow.innerHTML=`
+  <div class="ap-lbl">
+    <span>Wind</span>
+    <button class="ap-toggle" id="wind-toggle" role="switch" aria-checked="${AMB.wind}">
+      <span class="ap-toggle-knob"></span>
+    </button>
+  </div>`;
+apRows.appendChild(windRow);
+const windToggleBtn = document.getElementById('wind-toggle');
+windToggleBtn.classList.toggle('on', AMB.wind);
+windToggleBtn.addEventListener('click', ()=>{
+  AMB.wind = !AMB.wind;
+  windToggleBtn.classList.toggle('on', AMB.wind);
+  windToggleBtn.setAttribute('aria-checked', AMB.wind);
+  if(!AMB.wind) resetWind();
+});
+
+document.getElementById('ap-reset').addEventListener('click', ()=>{
   Object.assign(AMB,defaults);
-  SLIDERS.forEach(({key,fmt})=>{ document.getElementById('s-'+key).value=AMB[key]; document.getElementById('v-'+key).textContent=fmt(AMB[key]); });
+  SLIDERS.forEach(({key,min,max,fmt})=>{
+    const n = valToSegCount(AMB[key],min,max);
+    document.getElementById('v-'+key).textContent=fmt(AMB[key]);
+    const segsEl=document.getElementById('segs-'+key);
+    [...segsEl.children].forEach((seg,i)=>{
+      seg.classList.toggle('filled', i < n);
+      seg.classList.toggle('peak', i === n-1);
+    });
+  });
+  rainToggleBtn.classList.toggle('on', AMB.rain);
+  rainToggleBtn.setAttribute('aria-checked', AMB.rain);
+  rainMesh.visible = AMB.rain;
+  windToggleBtn.classList.toggle('on', AMB.wind);
+  windToggleBtn.setAttribute('aria-checked', AMB.wind);
+  if(!AMB.wind) resetWind();
   applyTime();
 });
-const fab=document.getElementById('amb-fab'), panel=document.getElementById('amb-panel');
+
+const fab=document.getElementById('time-badge'), panel=document.getElementById('amb-panel');
+const gooWrap=document.getElementById('goo-wrap');
+fab.style.cursor='pointer'; fab.style.pointerEvents='auto';
 fab.addEventListener('click', e=>{
   e.stopPropagation();
   const opening = panel.classList.contains('hidden');
-  // close both first
-  panel.classList.add('hidden');
   document.getElementById('todo-panel').classList.add('hidden');
-  if(opening) panel.classList.remove('hidden');
+
+  // Tiny squeeze on the badge — like surface tension before the droplet separates
+  fab.classList.add('goo-pulse');
+  setTimeout(()=>fab.classList.remove('goo-pulse'), 140);
+
+  // Engage the gooey filter for the duration of the separation/merge
+  gooWrap.classList.add('goo-active');
+  if(opening){ panel.classList.remove('hidden'); }
+  else{ panel.classList.add('hidden'); }
+  clearTimeout(gooWrap._gooTimer);
+  gooWrap._gooTimer=setTimeout(()=>gooWrap.classList.remove('goo-active'), 420);
 });
 // close button removed
 
@@ -1009,6 +1301,11 @@ todoFab.addEventListener('click', e=>{
 
 // Click anywhere outside panels dismisses whichever is open
 document.addEventListener('click', ()=>{
+  if(!panel.classList.contains('hidden')){
+    gooWrap.classList.add('goo-active');
+    clearTimeout(gooWrap._gooTimer);
+    gooWrap._gooTimer=setTimeout(()=>gooWrap.classList.remove('goo-active'), 420);
+  }
   panel.classList.add('hidden');
   todoPanel.classList.add('hidden');
 });
@@ -1020,7 +1317,7 @@ renderTodos();
 buildStrips();
 buildTaskTrees();
 
-// ── Sakura petals around main torii ──────────────────────────────────────────
+// ── Sakura petals around main torii
 // Tiny flat quads, instanced — one draw call, very cheap
 const PETAL_COUNT = IS_MOBILE ? 18 : 35;
 const PETAL_CX = 3, PETAL_CZ = 0; // centred on main torii
@@ -1089,6 +1386,146 @@ function tickPetals(elapsed){
   petalMesh.instanceMatrix.needsUpdate = true;
 }
 
+// ── Rain — toggled on/off via Ambience panel ───────────────────────────────────
+// Reuses the same lightweight instanced-mesh pattern as petals: thin
+// streak quads falling fast, spread across a wide swath of the island.
+const RAIN_COUNT = IS_MOBILE ? 60 : 140;
+const RAIN_CX = 0, RAIN_CZ = 0;     // centred on island
+const RAIN_R  = 30;                 // wide spawn radius — covers most of the island
+const RAIN_TOP = 26;                // spawn height above terrain
+const RAIN_BOT = -2;                // despawn just below water level
+
+const rainGeo = new THREE.PlaneGeometry(.045, .9); // thin vertical streak
+const rainMat = new THREE.MeshStandardMaterial({
+  color:'#bcd8ee', emissive:'#9fc3e8', emissiveIntensity:.25,
+  roughness:.3, side:THREE.DoubleSide,
+  transparent:true, opacity:.55,
+});
+const rainMesh = new THREE.InstancedMesh(rainGeo, rainMat, RAIN_COUNT);
+rainMesh.frustumCulled = false;
+rainMesh.visible = false; // hidden until toggled on
+scene.add(rainMesh);
+
+const rain = {
+  x: new Float32Array(RAIN_COUNT),
+  y: new Float32Array(RAIN_COUNT),
+  z: new Float32Array(RAIN_COUNT),
+  vy:new Float32Array(RAIN_COUNT), // fall speed — much faster than petals
+  vx:new Float32Array(RAIN_COUNT), // slight wind drift
+  len:new Float32Array(RAIN_COUNT),// streak length variance
+};
+
+const _rainDummy = new THREE.Object3D();
+function resetRain(i){
+  const a = Math.random()*Math.PI*2, r = Math.random()*RAIN_R;
+  rain.x[i] = RAIN_CX + Math.cos(a)*r;
+  rain.z[i] = RAIN_CZ + Math.sin(a)*r;
+  rain.y[i] = RAIN_TOP - Math.random()*4; // stagger spawn height
+  rain.vy[i]= .42 + Math.random()*.22;    // fast fall
+  rain.vx[i]= .04 + Math.random()*.03;    // gentle constant wind drift
+  rain.len[i]= .7 + Math.random()*.6;
+}
+for(let i=0;i<RAIN_COUNT;i++){
+  resetRain(i);
+  rain.y[i] = RAIN_BOT + Math.random()*(RAIN_TOP-RAIN_BOT); // spread on load
+}
+
+function tickRain(){
+  if(!AMB.rain) return;
+  for(let i=0;i<RAIN_COUNT;i++){
+    rain.y[i] -= rain.vy[i];
+    rain.x[i] += rain.vx[i];
+    if(rain.y[i] < RAIN_BOT) resetRain(i);
+    _rainDummy.position.set(rain.x[i], rain.y[i], rain.z[i]);
+    _rainDummy.rotation.set(0.12, 0, 0); // slight tilt to match wind drift
+    _rainDummy.scale.set(1, rain.len[i], 1);
+    _rainDummy.updateMatrix();
+    rainMesh.setMatrixAt(i, _rainDummy.matrix);
+  }
+  rainMesh.instanceMatrix.needsUpdate = true;
+}
+
+// ── Wind — toggled on/off via Ambience panel ───────────────────────────────────
+// A single wind direction drives everything so it reads as one coherent breeze:
+// bamboo leans/gusts that direction, lanterns swing like pendulums along it,
+// and a wind sock fills out and points downwind. No new draw calls for bamboo
+// or trees — only the wind sock adds a few small static-count meshes.
+const WIND_DIR = new THREE.Vector2(0.85, 0.35).normalize(); // fixed direction (x,z)
+const _windDummy = new THREE.Object3D();
+
+function tickWind(elapsed){
+  if(!AMB.wind) return;
+
+  // Gust strength — slow swell so it feels like a real changing breeze, not noise
+  const gust = 0.55 + Math.sin(elapsed*.35)*.25 + Math.sin(elapsed*.9)*.12;
+
+  // Bamboo — every stalk leans the SAME direction, with a fast small flutter on top
+  bambooGroves.forEach(grove=>{
+    const {culmM, count, baseX, baseZ, baseY, baseH, phase} = grove;
+    for(let i=0;i<count;i++){
+      const flutter = Math.sin(elapsed*5 + phase[i]) * 0.025;
+      const lean = (0.16 * gust) + flutter;
+      _windDummy.position.set(baseX[i], baseY[i] + baseH[i]/2, baseZ[i]);
+      _windDummy.scale.set(1, baseH[i]/7, 1);
+      // Rotate around the axis perpendicular to wind direction so the bend
+      // always points downwind regardless of each stalk's own facing
+      _windDummy.rotation.set(lean*WIND_DIR.y, phase[i]*0.3, -lean*WIND_DIR.x);
+      _windDummy.updateMatrix();
+      culmM.setMatrixAt(i, _windDummy.matrix);
+    }
+    culmM.instanceMatrix.needsUpdate = true;
+  });
+
+  // Lanterns — pendulum swing along the wind axis, gentle and in unison
+  lanternGroups.forEach(({group, phase})=>{
+    const swing = Math.sin(elapsed*1.4 + phase*0.15) * 0.3 * gust + 0.22*gust;
+    group.rotation.x =  swing * WIND_DIR.y;
+    group.rotation.z = -swing * WIND_DIR.x;
+  });
+
+  // Task tree canopies — soft lean, same direction as everything else
+  taskTrees.forEach(entry=>{
+    const lean = 0.05 * gust;
+    entry.group.rotation.x =  lean * WIND_DIR.y;
+    entry.group.rotation.z = -lean * WIND_DIR.x;
+  });
+
+  // Wind sock — chain of pivots: straight down when calm, swings up toward
+  // horizontal (pointing downwind) as gust strength increases. Tip flutters.
+  if(windSock){
+    const fill = Math.min(1, Math.max(0, gust*1.2)); // 0=limp, 1=fully filled/horizontal
+    const windYaw = Math.atan2(WIND_DIR.x, WIND_DIR.y);
+    windSock.group.rotation.y = windYaw;
+    windSock.pivots.forEach((pivot,i)=>{
+      const t=(i+1)/windSock.pivots.length;
+      // Calm: each segment hangs straight down (local -X rotation of 90° puts it vertical).
+      // Filled: rotates toward horizontal (0°), progressively more toward the tail.
+      const targetAngle = THREE.MathUtils.lerp(Math.PI/2, 0.08, fill*Math.min(1,t*1.3));
+      const flutter = Math.sin(elapsed*4.5 + i*1.3) * 0.06 * fill * t;
+      pivot.rotation.x = targetAngle + flutter;
+    });
+  }
+}
+
+function resetWind(){
+  bambooGroves.forEach(grove=>{
+    const {culmM, count, baseX, baseZ, baseY, baseH, phase} = grove;
+    for(let i=0;i<count;i++){
+      _windDummy.position.set(baseX[i], baseY[i] + baseH[i]/2, baseZ[i]);
+      _windDummy.scale.set(1, baseH[i]/7, 1);
+      _windDummy.rotation.set(0, phase[i]*0.3, 0);
+      _windDummy.updateMatrix();
+      culmM.setMatrixAt(i, _windDummy.matrix);
+    }
+    culmM.instanceMatrix.needsUpdate = true;
+  });
+  lanternGroups.forEach(({group})=>{ group.rotation.x=0; group.rotation.z=0; });
+  taskTrees.forEach(entry=>{ entry.group.rotation.x=0; entry.group.rotation.z=0; });
+  if(windSock){
+    windSock.pivots.forEach(pivot=>{ pivot.rotation.x = Math.PI/2; }); // hang straight down at rest
+  }
+}
+
 // ── Animate ───────────────────────────────────────────────────────────────────
 const clock = new THREE.Clock();
 let frameN=0;
@@ -1098,6 +1535,9 @@ function animate(){
   if(IS_MOBILE && frameN%2!==0) return;
   const elapsed=clock.getElapsedTime();
   tickPetals(elapsed);
+  tickRain();
+  tickWind(elapsed);
+  updatePersistentLabelPositions();
   scene.fog.density=FOG_BASE*AMB.fogDensity;
   controls.update();
   renderer.render(scene,camera);
