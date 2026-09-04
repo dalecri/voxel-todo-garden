@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Voxel Garden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,600;1,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
-body{overflow:hidden;background:#000}
+body{overflow:hidden;background:#000;font-family:'Inter',system-ui,sans-serif}
 #c{width:100vw;height:100vh;display:block}
 
 :root{
@@ -14,397 +17,239 @@ body{overflow:hidden;background:#000}
   --g-bg2:   rgba(255,255,255,.26);
   --g-border:rgba(255,255,255,.4);
   --g-shadow:0 8px 32px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.45);
-  --g-ink:   rgba(35,28,26,.88);    /* dark warm text: for use ON light glass pills */
-  --g-ink2:  rgba(255,255,255,.72); /* light text: for use on the scene backdrop directly */
+  --g-ink:   rgba(35,28,26,.88);    /* dark warm text — for use ON light glass pills */
+  --g-ink2:  rgba(255,255,255,.72); /* light text — for use on the scene backdrop directly */
   --g-ink3:  rgba(255,255,255,.42);
   --g-green: #58c462;
-  --mono:    'SF Mono','Fira Mono','Consolas',monospace;
+  --mono:    'IBM Plex Mono','SF Mono','Fira Mono','Consolas',monospace;
+  --sans:    'Inter',system-ui,sans-serif;
+  --serif:   'Fraunces',Georgia,serif;
   --r:       50px;
   --bar-w:   min(580px, calc(100vw - 32px));
   --bar-bot: max(28px, env(safe-area-inset-bottom, 28px));
 }
 
-/* Beautiful Translucent Switcher Container (Frosted Glass: Blends with background) */
-#nav-toggle-container {
-  position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 24px;
-  padding: 4px;
-  display: flex;
-  gap: 4px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  z-index: 902;
-  transition: background 0.3s, border-color 0.3s;
+/* ── App header — dark bar, title/subtitle left, clean icons right ── */
+#app-header{
+  position:fixed;top:0;left:0;right:0;z-index:903;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 14px;
+  background:var(--g-bg);
+  backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border-bottom:1px solid var(--g-border);
 }
-.mode-btn {
-  border: 1px solid transparent;
-  outline: none;
-  cursor: pointer;
-  width: 44px;
-  height: 36px;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  -webkit-tap-highlight-color: transparent;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.6); /* Lower contrast inactive state */
+.app-title{font-family:var(--sans);font-size:20px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.app-subtitle{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+.app-header-right{display:flex;align-items:center;gap:18px}
+.header-icon-btn{
+  background:none;border:none;padding:0;margin:0;
+  width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.92);cursor:pointer;
+  transition:opacity .12s,transform .1s;-webkit-tap-highlight-color:transparent;
 }
-.mode-btn:hover {
-  color: rgba(255, 255, 255, 0.95);
-  background: rgba(255, 255, 255, 0.08);
-}
-/* Settings active: subtle glass, bright white icon */
-.mode-btn.settings-active {
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  border: 1px solid rgba(255, 255, 255, 0.30);
-}
-/* Tasks active: soft translucent green highlight matching g-green */
-.mode-btn.tasks-active {
-  background: rgba(88, 196, 98, 0.25);
-  color: #58c462;
-  box-shadow: 0 2px 8px rgba(88, 196, 98, 0.15);
-  border: 1px solid rgba(88, 196, 98, 0.40);
-}
+.header-icon-btn:hover{opacity:.7}
+.header-icon-btn:active{transform:scale(.9)}
 
-/* Ambience panel: drops down directly from the top-center switcher left option */
+/* ── Ambience panel — centered modal, same glass as header/add-panel ── */
 #amb-panel{
-  position:fixed;z-index:901;
-  top:66px;
-  left: calc(50% - 140px);
-  transform:translateY(0) scale(1);
-  width:min(280px,calc(100vw - 32px));
-  transition:opacity .18s ease-out, transform .18s ease-out;
-  transform-origin:top center;
+  position:fixed;z-index:950;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(1);
+  width:min(330px,calc(100vw - 48px));
+  max-height:min(600px,82vh);overflow-y:auto;
   background:var(--g-bg);
   backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
   border:1px solid var(--g-border);
-  border-radius:20px;
+  border-radius:28px;
+  padding:26px 24px 24px;
   box-shadow:var(--g-shadow);
-  padding:14px 16px 14px;
+  transition:opacity .2s ease-out, transform .2s ease-out;
 }
 #amb-panel.hidden{
-  opacity:0;pointer-events:none;
-  transform:translateY(-8px) scale(.98);
-}
-
-/* Centered Tasks Modal Panel Card */
-#todo-panel{
-  position:fixed;z-index:901;
-  left:50%;top:50%;transform:translate(-50%,-50%) scale(1);
-  width:var(--bar-w);
-  transition:opacity .18s ease-out, transform .18s ease-out;
-  transform-origin:center center;
-  max-height:min(500px,80vh);
-  display:flex;flex-direction:column;gap:12px;
-  background:#fbfaf9;
-  border:none;
-  border-radius:30px;
-  box-shadow:0 30px 70px rgba(20,16,14,.16), 0 4px 14px rgba(20,16,14,.06);
-  padding:24px;
-}
-#todo-panel.hidden{
   opacity:0;pointer-events:none;
   transform:translate(-50%,-50%) scale(.94);
 }
 
-/* Panel internals */
-.ap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.ap-title{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:rgba(35,28,26,.42);text-transform:uppercase}
-.ap-reset{
-  width:26px;height:26px;border-radius:50%;padding:0;flex-shrink:0;
-  background:var(--g-bg2);border:1px solid var(--g-border);
-  color:rgba(35,28,26,.55);cursor:pointer;
+/* ── Add-task panel — slides up ~1/4 of the screen from the bottom ── */
+#add-panel{
+  position:fixed;z-index:901;
+  left:0;right:0;bottom:0;
+  height:25vh;min-height:230px;max-height:340px;
+  display:flex;flex-direction:column;gap:10px;
+  padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 12px);
+  background:var(--g-bg);
+  backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border-top:1px solid var(--g-border);
+  box-shadow:var(--g-shadow);
+  transition:transform .26s cubic-bezier(.16,1,.3,1), opacity .2s ease-out;
+  transform:translateY(0);
+}
+#add-panel.hidden{opacity:0;pointer-events:none;transform:translateY(100%)}
+.add-panel-input-row{
+  display:flex;align-items:center;gap:14px;flex-shrink:0;
+  border-bottom:1px solid var(--g-border);
+  padding-bottom:12px;
+}
+.add-panel-input-row input{
+  flex:1;height:32px;border:none;outline:none;background:none;
+  padding:0;font-family:var(--sans);font-size:15px;color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.2);
+}
+.add-panel-input-row input::placeholder{color:rgba(255,255,255,.45);font-style:italic}
+.add-panel-divider{width:1px;align-self:stretch;background:var(--g-border);flex-shrink:0}
+#task-submit{
+  flex-shrink:0;width:26px;height:26px;padding:0;
+  background:none;border:none;
+  color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:opacity .12s,transform .1s;-webkit-tap-highlight-color:transparent;
+}
+#task-submit:hover{opacity:.7}
+#task-submit:active{transform:scale(.9)}
+
+/* ── Ambience panel internals ── */
+.ap-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px}
+.ap-title{font-family:var(--sans);font-weight:700;font-size:24px;color:#fff;letter-spacing:-.01em}
+.ap-head-actions{display:flex;align-items:center;gap:8px}
+.ap-reset,.ap-close{
+  width:30px;height:30px;border-radius:50%;padding:0;flex-shrink:0;
+  background:none;border:none;
+  color:rgba(255,255,255,.5);cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   transition:background .12s,color .12s,transform .18s;
 }
-.ap-reset:hover{background:rgba(255,255,255,.4);color:rgba(35,28,26,.85)}
+.ap-reset:hover,.ap-close:hover{background:rgba(255,255,255,.1);color:#fff}
 .ap-reset:active{transform:rotate(-90deg)}
+.ap-close{font-size:16px}
 
-/* Ambience rows */
-#ap-rows{display:flex;flex-direction:column;gap:8px}
-.ap-row{
-  display:flex;align-items:center;gap:10px;
-  padding:9px 14px;border-radius:50px;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.3);
+.ap-section-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;
+  color:rgba(255,255,255,.4);text-transform:uppercase;
+  margin:20px 0 12px;
 }
-.ap-lbl-text{
-  width:90px;flex-shrink:0;
-  font-family:var(--mono);font-size:11px;color:rgba(35,28,26,.75);
-}
-.ap-val{font-family:var(--mono);font-size:10px;color:rgba(35,28,26,.45);min-width:30px;text-align:right;flex-shrink:0}
+.ap-section-label:first-of-type{margin-top:0}
 
-/* Dot-track slider */
-.ap-segs{display:flex;align-items:center;gap:7px;flex:1;height:20px;touch-action:none;-webkit-tap-highlight-color:transparent;cursor:pointer}
-.ap-seg{
-  width:5px;height:5px;border-radius:50%;flex-shrink:0;
-  background:rgba(35,28,26,.22);
-  transition:all .12s;
+/* Real filled-bar sliders */
+.ap-slider{margin-bottom:20px}
+.ap-slider:last-child{margin-bottom:0}
+.ap-slider-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.ap-slider-label{font-family:var(--sans);font-size:16px;font-weight:600;color:#fff}
+.ap-slider-val{font-family:var(--mono);font-size:16px;font-weight:700;color:#f0952e}
+.ap-slider-track{
+  position:relative;height:34px;border-radius:20px;
+  background:rgba(255,255,255,.1);
+  cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent;
+  overflow:hidden;
 }
-.ap-seg.peak{
-  width:3px;height:17px;border-radius:2px;
-  background:var(--seg-color,#e2935a);
-  box-shadow:0 0 8px var(--seg-color,#e2935a);
+.ap-slider-fill{
+  position:absolute;top:0;left:0;bottom:0;border-radius:20px;
+  background:#f0952e;
 }
 
-/* Merged toggle row */
-.ap-toggle-row{justify-content:space-between}
-.ap-toggle-item{display:flex;align-items:center;gap:8px;flex:1;justify-content:center}
-.ap-toggle-icon{font-size:14px;line-height:1}
-.ap-row-divider{width:1px;height:20px;background:rgba(35,28,26,.14);flex-shrink:0}
-.ap-toggle{
-  width:32px;height:18px;border-radius:10px;
-  background:rgba(35,28,26,.16);border:none;
-  cursor:pointer;position:relative;flex-shrink:0;
+/* Big iOS-style toggle rows */
+.ap-toggle-list{display:flex;flex-direction:column;gap:16px}
+.ap-toggle-row2{display:flex;align-items:center;gap:14px}
+.ap-toggle-big{
+  width:48px;height:28px;border-radius:16px;flex-shrink:0;
+  background:rgba(255,255,255,.14);border:none;
+  position:relative;cursor:pointer;
   transition:background .18s;-webkit-tap-highlight-color:transparent;
 }
-.ap-toggle.on{background:#9fc3e8}
-.ap-toggle-knob{
-  position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
-  background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);
+.ap-toggle-big.on{background:#f0952e}
+.ap-toggle-big .knob{
+  position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);
   transition:transform .18s cubic-bezier(.4,0,.2,1);
 }
-.ap-toggle.on .ap-toggle-knob{transform:translateX(14px)}
+.ap-toggle-big.on .knob{transform:translateX(20px)}
+.ap-toggle-label2{font-family:var(--sans);font-size:15px;font-weight:600;color:#fff}
 
-/* Task Panel Header and List layouts */
-.td-panel-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(0,0,0,.08);
-}
-.td-panel-title {
-  font-family: var(--mono);
-  font-size: 16px;
-  font-weight: bold;
-  color: rgba(35,28,26,.9);
-}
-.td-panel-meta {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: rgba(35,28,26,.5);
-}
-
-#todo-list {
-  overflow-y: auto;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-#todo-list::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
-}
-
-/* Flat list rows instead of individual cards */
+/* ── Task list ── */
+#todo-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.3) transparent;-webkit-overflow-scrolling:touch;padding-right:2px}
 .td-item{
-  display:flex;align-items:center;gap:14px;padding:14px 2px;
-  border-bottom:1px solid rgba(0,0,0,.07);
-  cursor:pointer;
-  background:none !important;
-  backdrop-filter:none !important;
-  border-radius:0 !important;
-  border-top:none !important;
-  border-left:none !important;
-  border-right:none !important;
-  transition:opacity .2s, background .2s;
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-radius:0;cursor:pointer;
+  background:rgba(255,255,255,.5);
+  backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border:1.5px dashed rgba(255,255,255,.5);
+  transition:background .2s,transform .2s;
   -webkit-tap-highlight-color:transparent;
 }
-.td-item:hover {
-  background: rgba(0,0,0,0.01) !important;
+.ap-completed-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 4px;cursor:pointer;
+  background:none;border:none;border-top:1px solid var(--g-border);
+  margin-top:4px;
+  font-family:var(--sans);font-size:12px;color:rgba(255,255,255,.6);
+  letter-spacing:.02em;transition:color .15s;
+  -webkit-tap-highlight-color:transparent;
 }
+.ap-completed-toggle:hover{color:rgba(255,255,255,.9)}
+.ap-completed-toggle .chev{transition:transform .18s;display:flex;align-items:center}
+.ap-completed-toggle.open .chev{transform:rotate(180deg)}
+.td-item:hover{background:rgba(255,255,255,.68);transform:translateX(2px)}
 
-/* Checkbox moved to order:3 (right-aligned) */
+/* Completed items — flat divider rows, no pill/glass, quiet and out of the way */
+.td-item.done{
+  opacity:.5;
+  background:none;border:none;backdrop-filter:none;-webkit-backdrop-filter:none;
+  border-radius:0;
+  border-bottom:1px solid var(--g-border);
+  padding:12px 14px;
+}
+.td-item.done:hover{background:none;transform:none}
+.td-item.done .td-text{text-decoration:line-through}
+.td-status{
+  font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:#f0952e;margin-bottom:1px;
+}
 .td-check{
-  order:3;
   width:20px;height:20px;border-radius:50%;
-  border:2px solid rgba(0,0,0,.14);
+  border:2px solid rgba(10,12,18,.25);
   flex-shrink:0;display:flex;align-items:center;justify-content:center;
   transition:all .22s;color:#fff;font-size:11px;
 }
-.td-item.done .td-check{
-  background:#4bc766 !important;
-  border-color:#4bc766 !important;
-  color:#fff;
-}
-
-/* Done items */
-.td-item.done{opacity:.5}
-.td-item.done .td-text{
-  text-decoration:line-through;
-  text-decoration-thickness:1.5px;
-  text-decoration-color:rgba(40,32,28,.5);
-}
-.td-item.done:hover{opacity:.8}
-.td-item.done:hover .td-text{
-  text-decoration-color:rgba(40,32,28,.75);
-  color:rgba(40,32,28,.85);
-}
-
-/* Text and Date block */
-.td-body{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;order:1}
-.td-text{font-family:var(--mono);font-size:12px;color:var(--g-ink);flex:1;word-break:break-word;line-height:1.4}
+.td-item.done .td-check{background:var(--g-green);border-color:var(--g-green);color:#fff}
+.td-text{font-family:var(--sans);font-size:12px;color:var(--g-ink);flex:1;word-break:break-word;line-height:1.4}
+.td-body{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
 .td-date{font-family:var(--mono);font-size:10px;color:rgba(10,12,18,.55);letter-spacing:.02em}
-
-/* Delete action button */
-.td-del{
-  order:2;
-  background:none;border:none;color:rgba(10,12,18,.3);font-size:15px;cursor:pointer;
-  padding:3px 5px;flex-shrink:0;transition:color .12s, opacity .12s;
-  -webkit-tap-highlight-color:transparent;
-  opacity:0;
-}
-.td-item:hover .td-del{opacity:1}
+.td-del{background:none;border:none;color:rgba(10,12,18,.3);font-size:15px;cursor:pointer;padding:3px 5px;flex-shrink:0;transition:color .12s;-webkit-tap-highlight-color:transparent}
 .td-del:hover,.td-del:active{color:rgba(220,60,60,.9)}
 
-/* Completed section collapse toggle */
-.ap-completed-toggle{
-  display:flex;align-items:center;justify-content:center;gap:6px;
-  padding:10px 16px;border-radius:50px;cursor:pointer;
-  background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08);
-  font-family:var(--mono);font-size:11px;color:rgba(35,28,26,.6);
-  letter-spacing:.04em;transition:background .15s;
-  -webkit-tap-highlight-color:transparent;
-  margin-top: 4px;
-}
-.ap-completed-toggle:hover{background:rgba(0,0,0,.08)}
-.ap-completed-toggle .chev{transition:transform .18s;display:inline-block}
-.ap-completed-toggle.open .chev{transform:rotate(180deg)}
-
-/* Footer row button */
-.td-add-row {
-  border: 2px dashed rgba(35,28,26,.15);
-  border-radius: 50px;
-  padding: 12px;
-  text-align: center;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: rgba(35,28,26,.6);
-  cursor: pointer;
-  transition: background .15s, border-color .15s, color .15s;
-  margin-top: 8px;
-}
-.td-add-row:hover {
-  background: rgba(35,28,26,.04);
-  border-color: rgba(35,28,26,.3);
-  color: rgba(35,28,26,.9);
-}
-
-/* Clean Translucent Glassmorphic Task Bar (Matches top switcher layout perfectly) */
-#task-bar{
-  position:fixed;
-  bottom:var(--bar-bot);
-  left:50%;transform:translateX(-50%);
-  width:var(--bar-w);
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 28px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-  display: flex;
-  align-items: center;
-  height: 56px;
-  padding: 0 14px 0 16px;
-  z-index: 900;
-  transition: background 0.3s, border-color 0.3s;
-}
-.task-bullet {
-  width:24px;
-  height:24px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin-right:12px;
-  flex-shrink:0;
-}
-#task-input{
-  height:100%;
-  flex:1;background:none;border:none;outline:none;
-  font-family:var(--mono);font-size:14px;
-  color: rgba(255, 255, 255, 0.9); /* Translucent high contrast warm-white text */
-  caret-color: var(--g-green);
-  padding:0;
-}
-#task-input::placeholder{
-  color: rgba(255, 255, 255, 0.5); /* Frosted white input placeholder */
-  font-style:normal;
-}
-#task-submit{
-  display:flex;
-  flex-shrink:0;width:36px;height:36px;
-  border-radius:12px;
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  color: rgba(255, 255, 255, 0.85);
-  cursor:pointer;
-  align-items:center;
-  justify-content:center;
-  transition:background .15s, transform 0.1s;
-  margin-left:6px;
-  -webkit-tap-highlight-color:transparent;
-}
-#task-submit:hover{background: rgba(255, 255, 255, 0.25);}
-#task-submit:active{transform:scale(.95)}
-
-/* Mobile Adjustments */
+/* ── Mobile ── */
 @media (max-width:640px){
-  :root{--bar-bot:max(20px,env(safe-area-inset-bottom,20px))}
-  #task-bar{
-    height:52px;
-    border-radius:26px;
-    padding:0 10px;
-    width:calc(100vw - 32px);
-    --bar-w:calc(100vw - 32px);
-  }
-  #task-input{font-size:16px;padding:0}
-  #task-submit{display:flex}
-  #amb-panel{width:calc(100vw - 24px); top:64px; left:12px;}
-  #todo-panel{width:calc(100vw - 24px); max-height:min(450px,75vh); padding:16px;}
-  .td-item{padding:12px 2px}
+  #app-header{padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px}
+  .app-title{font-size:18px}
+  .app-header-right{gap:14px}
+  #task-input{font-size:16px}
+  #amb-panel{width:min(308px,calc(100vw - 32px))}
+  #add-panel{height:30vh;min-height:210px}
+  .td-item{padding:12px 14px}
   .td-check{width:22px;height:22px}
   .td-text{font-size:13px}
 }
 
-/* Tooltips */
+/* ── Tooltip ── */
 #lamp-tooltip{
   position:fixed;pointer-events:none;z-index:999;
-  background:rgba(255,255,255,.18);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
-  border:1px solid rgba(255,255,255,.3);border-radius:var(--r);
-  padding:8px 13px;font-family:var(--mono);font-size:12px;color:#fff;
+  background:var(--g-bg);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border:1px solid var(--g-border);border-radius:var(--r);
+  padding:8px 13px;font-family:var(--sans);font-size:12px;color:#fff;
   text-shadow:0 1px 3px rgba(0,0,0,.3);
   max-width:min(240px,72vw);line-height:1.5;
-  box-shadow:0 4px 20px rgba(0,0,0,.18);transition:opacity .1s;
+  box-shadow:var(--g-shadow);transition:opacity .1s;
 }
 #lamp-tooltip.hidden{opacity:0}
 
-/* Persistent labels */
+/* ── Persistent tree labels (eye toggle) ── */
 .tree-label{
   position:fixed;z-index:998;pointer-events:none;
   transform:translate(-50%,-100%);
-  background:rgba(255,255,255,.18);backdrop-filter:blur(12px) saturate(1.4);-webkit-backdrop-filter:blur(12px) saturate(1.4);
-  border:1px solid rgba(255,255,255,.3);border-radius:8px;
-  padding:5px 10px;font-family:var(--mono);font-size:11px;color:#fff;
+  background:var(--g-bg);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border:1px solid var(--g-border);border-radius:8px;
+  padding:5px 10px;font-family:var(--sans);font-size:11px;color:#fff;
   text-shadow:0 1px 3px rgba(0,0,0,.3);
   white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;
-  box-shadow:0 4px 14px rgba(0,0,0,.18);
+  box-shadow:var(--g-shadow);
 }
 </style>
 </head>
@@ -412,75 +257,60 @@ body{overflow:hidden;background:#000}
 <canvas id="c"></canvas>
 <div id="lamp-tooltip" class="hidden"></div>
 
-<!-- Custom Tactile Navigation Panel Switcher at the Top Center -->
-<div id="nav-toggle-container">
-  <button class="mode-btn settings-inactive" id="toggle-settings-btn" title="Toggle Ambience settings">
-    <!-- SVG Sliders Settings Icon -->
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="4" y1="21" x2="4" y2="14"></line>
-      <line x1="4" y1="10" x2="4" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="12"></line>
-      <line x1="12" y1="8" x2="12" y2="3"></line>
-      <line x1="20" y1="21" x2="20" y2="16"></line>
-      <line x1="20" y1="12" x2="20" y2="3"></line>
-      <line x1="1" y1="14" x2="7" y2="14"></line>
-      <line x1="9" y1="8" x2="15" y2="8"></line>
-      <line x1="17" y1="16" x2="23" y2="16"></line>
-    </svg>
-  </button>
-  <button class="mode-btn tasks-inactive" id="toggle-tasks-btn" title="Toggle Completed Tasks modal">
-    <!-- SVG Completed Checklist Double Check Icon -->
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M2 12l5 5L22 4"></path>
-      <path d="M2 19l5 5L22 11" opacity="0.5"></path>
-    </svg>
-  </button>
-</div>
-
-<!-- Ambience panel settings card -->
-<div id="amb-panel" class="hidden">
-  <div class="ap-head">
-    <span class="ap-title">Ambience</span>
-    <button class="ap-reset" id="ap-reset" title="Reset to defaults">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+<!-- App header — title/subtitle left, clean icon buttons right (no circle bg) -->
+<div id="app-header">
+  <div class="app-header-left">
+    <div class="app-title">Voxel Garden</div>
+    <div class="app-subtitle" id="app-subtitle">0 tasks</div>
+  </div>
+  <div class="app-header-right">
+    <button id="add-fab" class="header-icon-btn" title="Plant a new task">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+    <button id="settings-fab" class="header-icon-btn" title="Ambience settings">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+        <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+        <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
       </svg>
     </button>
   </div>
-  <div id="ap-rows"></div>
 </div>
 
-<!-- Modal tasks centered panel card -->
-<div id="todo-panel" class="hidden">
-  <div class="td-panel-header">
-    <span class="td-panel-title">My Tasks</span>
-    <div class="td-panel-meta">
-      <span class="td-panel-date">📅 <span id="td-date-text"></span></span>
-      <span class="td-panel-count" id="td-count-text">0 tasks</span>
+<div id="amb-panel" class="hidden">
+  <div class="ap-head">
+    <span class="ap-title">Ambience</span>
+    <div class="ap-head-actions">
+      <button class="ap-reset" id="ap-reset" title="Reset to defaults">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+      </button>
+      <button class="ap-close" id="amb-close" title="Close">✕</button>
     </div>
   </div>
-  <div id="todo-list"></div>
-  <div id="td-add-row" class="td-add-row">
-    <span>+ Add Task</span>
-  </div>
+  <div class="ap-section-label">Display</div>
+  <div id="ap-sliders"></div>
+  <div class="ap-section-label">Weather</div>
+  <div class="ap-toggle-list" id="ap-toggles"></div>
 </div>
 
-<!-- Task bar with beautiful inline sprout SVG bullet -->
-<div id="task-bar">
-  <div class="task-bullet" title="Plant sprout logo">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#237a34" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 22V12" />
-      <path d="M12 12C12 12 15 9 18 9C21 9 21 12 18 12C15 12 12 12 12 12Z" fill="#c6ebd0" />
-      <path d="M12 14C12 14 9 11 6 11C3 11 3 14 6 14C9 14 12 14 12 14Z" fill="#c6ebd0" />
-    </svg>
+<!-- Add-task panel — slides up ~1/4 of the screen from the bottom when the
+     header's "+" is tapped. Holds the input plus the existing task list. -->
+<div id="add-panel" class="hidden">
+  <div class="add-panel-input-row">
+    <input id="task-input" type="text" placeholder="plant a new task…" maxlength="120" autocomplete="off" spellcheck="false">
+    <div class="add-panel-divider"></div>
+    <button id="task-submit" title="Add task">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </button>
   </div>
-  <input id="task-input" type="text" placeholder="Plant a new tree" maxlength="120" autocomplete="off" spellcheck="false">
-  <button id="task-submit" title="Add task">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
-  </button>
+  <div id="todo-list"></div>
 </div>
 
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/controls/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/"}}</script>
@@ -488,10 +318,10 @@ body{overflow:hidden;background:#000}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// Detect mobile
+// ── Detect mobile ─────────────────────────────────────────────────────────────
 const IS_MOBILE = window.innerWidth <= 768 || ('ontouchstart' in window);
 
-// Renderer
+// ── Renderer ──────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({
   canvas, antialias: !IS_MOBILE, powerPreference:'high-performance'
@@ -508,16 +338,16 @@ window.addEventListener('resize',()=>{
   camera.updateProjectionMatrix();
 });
 
-// Scene
+// ── Scene ─────────────────────────────────────────────────────────────────────
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#1a3a6a');
 scene.fog = new THREE.FogExp2('#1a3a6a', 0.004);
 
-// Camera
+// ── Camera ────────────────────────────────────────────────────────────────────
 const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.5, 400);
 camera.position.set(0, 28, 62);
 
-// Controls
+// ── Controls ──────────────────────────────────────────────────────────────────
 const controls = new OrbitControls(camera, canvas);
 controls.target.set(0, 3, 0);
 controls.enableDamping = true;
@@ -528,30 +358,31 @@ controls.zoomSpeed = 0.17;
 controls.maxPolarAngle = Math.PI * 0.52;
 controls.update();
 
-// Lighting: ONLY 2 lights total
+// ── Lighting — ONLY 2 lights total ───────────────────────────────────────────
 const hemi = new THREE.HemisphereLight(0x6ab4f5, 0x3a6a30, 1.2);
 scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff8e0, 1.6);
 sun.position.set(60, 80, -40);
 scene.add(sun);
 
-// Warm night fill
+// Warm night fill — mimics old-fashioned street-lamp ambient wash
 const nightFill = new THREE.PointLight(0xffcc66, 0, 200);
 nightFill.position.set(0, 18, 0);
 scene.add(nightFill);
+// Second fill from opposite angle for even coverage
 const nightFill2 = new THREE.PointLight(0xffaa44, 0, 200);
 nightFill2.position.set(-10, 14, -10);
 scene.add(nightFill2);
 
-// Ambience settings
+// ── Ambience settings ─────────────────────────────────────────────────────────
 const AMB = { brightness: 1.0, fogDensity: 1.0, rain: false, wind: false };
 const FOG_BASE = 0.004;
 
-// Terrain helpers
+// ── Terrain helpers ───────────────────────────────────────────────────────────
 const terrain = new Map();
 const getH = (x,z) => terrain.get(`${Math.round(x)},${Math.round(z)}`) ?? 0;
 
-// Shared materials
+// ── Shared materials (reuse aggressively) ─────────────────────────────────────
 const MAT = {
   grass1:  new THREE.MeshStandardMaterial({color:'#3c583a',emissive:'#1a2a18',emissiveIntensity:0}),
   grass2:  new THREE.MeshStandardMaterial({color:'#4a6946',emissive:'#1e2e1c',emissiveIntensity:0}),
@@ -570,8 +401,10 @@ const MAT = {
   water:   new THREE.MeshStandardMaterial({color:'#3a7fcc',emissive:'#0a1e44',emissiveIntensity:.4,transparent:true,opacity:.75,roughness:.15}),
 };
 
+// All terrain+world mats that get night emissive — excludes water (always emissive)
 const NIGHT_MATS = [MAT.grass1,MAT.grass2,MAT.grass3,MAT.sand,MAT.stone,MAT.darkSt,MAT.wood,MAT.red,MAT.darkRed,MAT.iron,MAT.bam,MAT.bamDark,MAT.bamboPole,MAT.bowlMat];
 
+// Emissive materials — no PointLight needed, just glow
 const EMIT = {
   lampGlow: new THREE.MeshStandardMaterial({color:'#fff8d0',emissive:'#ffdd66',emissiveIntensity:6,transparent:true,opacity:.9}),
   lampHalo: new THREE.MeshStandardMaterial({color:'#ffee88',emissive:'#ffcc44',emissiveIntensity:1.5,transparent:true,opacity:.07,depthWrite:false,side:THREE.BackSide}),
@@ -582,9 +415,10 @@ const EMIT = {
   fireCore:   new THREE.MeshStandardMaterial({color:'#ff8800',emissive:'#ff4400',emissiveIntensity:6,transparent:true,opacity:.9}),
 };
 
-// Terrain generation
+// ── Terrain generation ────────────────────────────────────────────────────────
 function buildTerrain(){
   const SIZE = IS_MOBILE ? 32 : 38;
+  // Simple noise function
   for(let x=-SIZE;x<=SIZE;x++) for(let z=-SIZE;z<=SIZE;z++){
     const d=Math.sqrt(x*x+z*z); if(d>SIZE) continue;
     const edge=Math.max(0,1-d/SIZE);
@@ -608,6 +442,7 @@ function buildTerrain(){
     scene.add(mesh);
   });
 
+  // Water ring
   const wBox=new THREE.BoxGeometry(1,.4,1);
   const wCells=[]; for(const [key,h] of terrain){ const [x,z]=key.split(',').map(Number); if(h<=1) wCells.push({x,z}); }
   if(wCells.length){
@@ -617,26 +452,30 @@ function buildTerrain(){
   }
 }
 
-// Torii gate
+// ── Torii gate ────────────────────────────────────────────────────────────────
 function createTorii(cx,cz,rotY=0,scale=1){
   const g=new THREE.Group();
   const postH=8;
 
+  // Sample ground height under each post in world space
   const postOffsets=[-2.2,2.2];
   const postGroundY=postOffsets.map(lx=>{
     const wx=cx+lx*Math.cos(rotY);
     const wz=cz-lx*Math.sin(rotY);
     return Math.max(getH(wx,wz), getH(wx+1,wz), getH(wx-1,wz), getH(wx,wz+1), getH(wx,wz-1));
   });
+  // Place group at the lower post ground so neither floats
   const baseY=Math.min(postGroundY[0],postGroundY[1]);
 
   postOffsets.forEach((lx,i)=>{
     const post=new THREE.Mesh(new THREE.CylinderGeometry(.28,.35,postH,7),MAT.red);
     post.position.set(lx,4,0); g.add(post);
+    // Foot extends down to match local terrain difference
     const localGround=postGroundY[i]-baseY;
     const footH=0.5+localGround;
     const foot=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,footH,7),MAT.darkRed);
     foot.position.set(lx,localGround-footH/2+0.25,0); g.add(foot);
+    // Sink post 1 unit into ground
     post.position.set(lx,4+localGround-1,0);
   });
 
@@ -649,22 +488,24 @@ function createTorii(cx,cz,rotY=0,scale=1){
   scene.add(g);
 }
 
-// Task trees
+// ── Task trees ────────────────────────────────────────────────────────────────
 const TREE_POOL = [
   [14,8],[-8,-12],[18,-6],[-16,4],[6,-20],[22,16],[-20,-14],[4,18],
   [-10,20],[16,-18],[-24,6],[10,10],[-6,-18],[20,-14],[-14,12],[8,22],
 ];
 
-const taskTrees = [];
+const taskTrees = []; // { group, canopyMats, hitMesh, todo }
 
 function spawnTaskTree(x, z, todo){
   const y = getH(x, z);
   const g = new THREE.Group();
 
+  // Trunk
   const trunkMat = new THREE.MeshStandardMaterial({color: todo.done ? '#5a4020' : '#6b4a2a', roughness:.9});
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,2.5,6), trunkMat);
   trunk.position.y = 1.25; g.add(trunk);
 
+  // Canopy clouds — always pink blossom (trees only spawn for pending tasks now)
   const canopyMats = [];
   const clouds = [[0,3.8,0,2.0],[1.1,3.2,.7,1.5],[-0.9,3.0,.5,1.3],[.35,4.3,-.5,1.7],[-1.2,3.4,-.7,1.2]];
   clouds.forEach(([bx,by,bz,r])=>{
@@ -676,6 +517,7 @@ function spawnTaskTree(x, z, todo){
     cloud.position.set(bx,by,bz); g.add(cloud);
   });
 
+  // Invisible hit sphere — large, easy to hover
   const hitMesh = new THREE.Mesh(
     new THREE.SphereGeometry(2.2,6,6),
     new THREE.MeshBasicMaterial({visible:false})
@@ -691,16 +533,17 @@ function spawnTaskTree(x, z, todo){
   return entry;
 }
 
+// Flower colour palette — warm spring Japanese garden
 const FLOWER_PALETTE = [
-  {petal:'#f4a0c0',center:'#f0d060',emissive:'#e06080'},
-  {petal:'#d8a8e8',center:'#f0e060',emissive:'#b070d0'},
-  {petal:'#f8c060',center:'#f04040',emissive:'#d09020'},
-  {petal:'#f09070',center:'#f0d050',emissive:'#d06040'},
-  {petal:'#a8c8f0',center:'#ffe860',emissive:'#6090d0'},
-  {petal:'#f0e0b0',center:'#e07030',emissive:'#c0b060'},
+  {petal:'#f4a0c0',center:'#f0d060',emissive:'#e06080'}, // sakura pink
+  {petal:'#d8a8e8',center:'#f0e060',emissive:'#b070d0'}, // lavender
+  {petal:'#f8c060',center:'#f04040',emissive:'#d09020'}, // warm yellow
+  {petal:'#f09070',center:'#f0d050',emissive:'#d06040'}, // coral
+  {petal:'#a8c8f0',center:'#ffe860',emissive:'#6090d0'}, // periwinkle
+  {petal:'#f0e0b0',center:'#e07030',emissive:'#c0b060'}, // cream
 ];
 
-const taskFlowers = [];
+const taskFlowers = []; // { group }
 
 function spawnTaskFlower(x, z, todo){
   const y = getH(x, z);
@@ -709,11 +552,13 @@ function spawnTaskFlower(x, z, todo){
 
   const stemMat   = new THREE.MeshStandardMaterial({color:'#3a6020',emissive:'#182808',emissiveIntensity:0,roughness:.9});
   const petalMat  = new THREE.MeshStandardMaterial({color:col.petal, emissive:col.emissive, emissiveIntensity:.35, roughness:.8});
-  const centerMat = new THREE.MeshStandardMaterial({color:col.center,emissive:col.center,  emissiveIntensity:.5,   roughness:.7});
+  const centerMat = new THREE.MeshStandardMaterial({color:col.center,emissive:col.center,  emissiveIntensity:.5,  roughness:.7});
 
+  // Short stem
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.38,5), stemMat);
   stem.position.y = .19; g.add(stem);
 
+  // 5 petals radiating outward — flat oblate spheres
   const PETALS = 5;
   for(let i=0;i<PETALS;i++){
     const a = (i/PETALS)*Math.PI*2;
@@ -723,6 +568,7 @@ function spawnTaskFlower(x, z, todo){
     g.add(petal);
   }
 
+  // Slightly smaller second ring of petals, offset
   for(let i=0;i<PETALS;i++){
     const a = (i/PETALS)*Math.PI*2 + Math.PI/PETALS;
     const petal = new THREE.Mesh(new THREE.SphereGeometry(.1,5,4), petalMat);
@@ -731,10 +577,12 @@ function spawnTaskFlower(x, z, todo){
     g.add(petal);
   }
 
+  // Centre dome
   const centre = new THREE.Mesh(new THREE.SphereGeometry(.1,6,5), centerMat);
   centre.scale.set(1,.7,1);
   centre.position.y = .47; g.add(centre);
 
+  // Tiny leaf pairs at base
   const leafMat = new THREE.MeshStandardMaterial({color:'#4a7830',emissive:'#1a3010',emissiveIntensity:0,roughness:.88});
   for(let i=0;i<2;i++){
     const a = (i/2)*Math.PI + .4;
@@ -752,6 +600,7 @@ function spawnTaskFlower(x, z, todo){
 }
 
 function buildTaskTrees(){
+  // Clear both trees and flowers
   taskTrees.forEach(t=>scene.remove(t.group));
   taskTrees.length = 0;
   taskFlowers.forEach(f=>scene.remove(f.group));
@@ -766,25 +615,26 @@ function buildTaskTrees(){
     const nz = validPool[i][1] + ((seed*6271)%100)/100 - 0.5;
     if(getH(nx,nz) <= 2) return;
     if(t.done){
-      spawnTaskFlower(nx, nz, t);
+      spawnTaskFlower(nx, nz, t); // completed → small flower
     } else {
-      spawnTaskTree(nx, nz, t);
+      spawnTaskTree(nx, nz, t);   // pending → full tree
     }
   });
-  buildPersistentLabels();
+  buildPersistentLabels(); // refresh eye-toggle labels to match current trees
 }
 
-// Hover / tooltip
+// ── Hover / tooltip ───────────────────────────────────────────────────────────
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let hoveredTree = null;
 const tooltip = document.getElementById('lamp-tooltip');
 
-// Persistent labels
+// ── Eye toggle — persistent labels for all trees ──────────────────────────────
 let labelsAlwaysOn = false;
-const persistentLabels = [];
+const persistentLabels = []; // { el, entry }
 
 function buildPersistentLabels(){
+  // Remove old label elements
   persistentLabels.forEach(p=>p.el.remove());
   persistentLabels.length = 0;
   if(!labelsAlwaysOn) return;
@@ -817,11 +667,16 @@ function updatePersistentLabelPositions(){
   });
 }
 
+// Eye/persistent-labels toggle UI was removed along with the old bottom FAB
+// row; labelsAlwaysOn simply stays false so hover-tooltips are the only
+// label mechanism now.
+
 function onPointerMove(e){
+  // Skip hover-tooltip logic entirely while persistent labels are on
   if(labelsAlwaysOn){ tooltip.classList.add('hidden'); return; }
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
   const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  mouse.x = (clientX / innerWidth)  * 2 - 1;
+  mouse.x = (clientX / innerWidth)  *  2 - 1;
   mouse.y = (clientY / innerHeight) * -2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
@@ -856,8 +711,9 @@ function setTreeHover(entry, on){
 window.addEventListener('mousemove', onPointerMove, {passive:true});
 window.addEventListener('touchmove',  onPointerMove, {passive:true});
 
-// Tiki torch
+// ── Tiki torch (emissive flame, no PointLight) ────────────────────────────────
 function createTikiTorch(x,z){
+  // Only skip positions completely off the island (not in terrain map at all)
   if(terrain.get(`${Math.round(x)},${Math.round(z)}`) === undefined) return;
   const g=new THREE.Group();
   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.055,.085,.7,6),MAT.bamboPole); pole.position.y=.35;
@@ -870,15 +726,17 @@ function createTikiTorch(x,z){
   scene.add(g);
 }
 
-// Red lantern string (emissive only)
-const lanternGroups = [];
+// ── Red lantern string (emissive only) ────────────────────────────────────────
+// Lantern groups registered here so wind can swing them in unison
+const lanternGroups = []; // { group, pivotY, phase }
 
 function createLanternString(ax,az,bx,bz,count=5,h=7){
   const postMat=new THREE.MeshStandardMaterial({color:'#2a2218',roughness:.8});
   const ropeMat=new THREE.MeshStandardMaterial({color:'#3a3020',roughness:.95});
   const ay=getH(ax,az)+h, by=getH(bx,bz)+h;
 
-  const pts=[];
+  // Compute all lantern world positions first so we can draw rope between them
+  const pts=[]; // {x,y,z} for each i from 0..count
   for(let i=0;i<=count;i++){
     const t=i/count;
     const lx=ax+(bx-ax)*t, lz=az+(bz-az)*t;
@@ -887,6 +745,7 @@ function createLanternString(ax,az,bx,bz,count=5,h=7){
     pts.push({x:lx, y:ly, z:lz});
   }
 
+  // Draw posts at endpoints
   [0,count].forEach(i=>{
     const {x,y,z}=pts[i];
     const gy=getH(x,z);
@@ -895,11 +754,13 @@ function createLanternString(ax,az,bx,bz,count=5,h=7){
     post.position.set(x,gy+postH/2,z); scene.add(post);
   });
 
+  // Draw rope segments between every adjacent pair of points
   for(let i=0;i<count;i++){
     const a=pts[i], b=pts[i+1];
     const dx=b.x-a.x, dy=b.y-a.y, dz=b.z-a.z;
     const len=Math.sqrt(dx*dx+dy*dy+dz*dz);
     const rope=new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,len,4),ropeMat);
+    // Position at midpoint, orient along segment
     rope.position.set((a.x+b.x)/2,(a.y+b.y)/2,(a.z+b.z)/2);
     rope.quaternion.setFromUnitVectors(
       new THREE.Vector3(0,1,0),
@@ -908,6 +769,7 @@ function createLanternString(ax,az,bx,bz,count=5,h=7){
     scene.add(rope);
   }
 
+  // Draw lanterns
   for(let i=1;i<count;i++){
     const {x,y,z}=pts[i];
     const lg=new THREE.Group();
@@ -916,17 +778,21 @@ function createLanternString(ax,az,bx,bz,count=5,h=7){
     const topC=new THREE.Mesh(new THREE.CylinderGeometry(.22,.38,.18,8),postMat); topC.position.y=-.41;
     const botC=new THREE.Mesh(new THREE.CylinderGeometry(.38,.22,.18,8),postMat); botC.position.y=-1.49;
     const glw=new THREE.Mesh(new THREE.SphereGeometry(.26,6,6),EMIT.lanternGlow); glw.position.y=-.95;
+    // Tiny string connecting rope to lantern top so the pivot reads visually
     const stringMat=new THREE.MeshStandardMaterial({color:'#2a2218',roughness:.9});
     const str_=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.4,4),stringMat); str_.position.y=-.2;
     lg.add(body,topC,botC,glw,str_);
+    // Group sits AT the rope point — children are offset down — so rotating
+    // the group swings the whole lantern like a pendulum from the rope
     lg.position.set(x,y,z);
     scene.add(lg);
     lanternGroups.push({group:lg, pivotY:y, phase:Math.random()*Math.PI*2});
   }
 }
 
-// Bamboo grove
-const bambooGroves = [];
+// ── Bamboo grove (instanced) ──────────────────────────────────────────────────
+// Bamboo groves registered here so wind sway can animate them cheaply
+const bambooGroves = []; // { culmM, count, baseX:[], baseZ:[], baseY:[], baseH:[], phase:[] }
 
 function createBambooGrove(cx,cz,count=IS_MOBILE?8:18){
   const culmG=new THREE.CylinderGeometry(.12,.15,7,5);
@@ -956,7 +822,7 @@ function createBambooGrove(cx,cz,count=IS_MOBILE?8:18){
   bambooGroves.push({culmM, count, baseX, baseZ, baseY, baseH, phase});
 }
 
-// Simple tree
+// ── Simple tree (no per-tree light, no petals) ────────────────────────────────
 function createTree(x,z){
   const g=new THREE.Group();
   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.2,.3,2.5,6),MAT.wood); trunk.position.y=1.25;
@@ -971,7 +837,19 @@ function createTree(x,z){
   scene.add(g);
 }
 
-// Simple shrine
+// ── Firepit (emissive only) ───────────────────────────────────────────────────
+function createFirepit(x,z){
+  const g=new THREE.Group();
+  const ring=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.5,.3,10),MAT.stone); ring.position.y=.15;
+  const logs=new THREE.Mesh(new THREE.CylinderGeometry(.3,.4,.8,6),MAT.wood); logs.position.y=.5;
+  const fire=new THREE.Mesh(new THREE.ConeGeometry(.45,.9,7),EMIT.fireCore); fire.position.y=1.0;
+  const outer=new THREE.Mesh(new THREE.ConeGeometry(.65,1.2,7),EMIT.torchOuter); outer.position.y=1.1;
+  g.add(ring,logs,fire,outer);
+  g.position.set(x,getH(x,z),z);
+  scene.add(g);
+}
+
+// ── Simple shrine ─────────────────────────────────────────────────────────────
 function createShrine(x,z){
   const g=new THREE.Group();
   const plinth=new THREE.Mesh(new THREE.BoxGeometry(5,.5,4),MAT.stone); plinth.position.y=.25;
@@ -986,7 +864,24 @@ function createShrine(x,z){
   scene.add(g);
 }
 
-// Wind sock
+// ── Simple dock ───────────────────────────────────────────────────────────────
+function createDock(x,z,angle=0){
+  const g=new THREE.Group();
+  const plankMat=new THREE.MeshStandardMaterial({color:'#7a5c3a',roughness:.95});
+  const postMat=new THREE.MeshStandardMaterial({color:'#5a3c20',roughness:.98});
+  for(let i=0;i<6;i++){
+    const p=new THREE.Mesh(new THREE.BoxGeometry(.9,.1,1.0),plankMat);
+    p.position.set(0,.05,i*1.08); g.add(p);
+  }
+  [-.38,.38].forEach(side=>{
+    const pile=new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,2.2,5),postMat);
+    pile.position.set(side,-1.05,2.7); g.add(pile);
+  });
+  g.rotation.y=angle; g.position.set(x,getH(x,z),z);
+  scene.add(g);
+}
+
+// ── Wind sock — fills out and points downwind when wind is toggled on ─────────
 let windSock = null;
 function createWindSock(x,z){
   const y=getH(x,z);
@@ -997,24 +892,32 @@ function createWindSock(x,z){
   const stripeA=new THREE.MeshStandardMaterial({color:'#e8501a',emissive:'#8a2a0a',emissiveIntensity:.15,roughness:.85});
   const stripeB=new THREE.MeshStandardMaterial({color:'#f0eee6',emissive:'#888278',emissiveIntensity:.1,roughness:.85});
 
+  // Pole
   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,3.2,6),poleMat);
   pole.position.y=1.6; group.add(pole);
+  // Mount ring at top — sock hangs from here, oriented so its hole faces along Z
   const ring=new THREE.Mesh(new THREE.TorusGeometry(.16,.03,5,10),ringMat);
   ring.position.y=3.15; group.add(ring);
 
+  // Sock body — a CHAIN of pivot groups, each holding one tapered tube segment.
+  // Each pivot rotates independently so the whole sock can droop straight down
+  // when calm, or swing up toward horizontal (pointing downwind) when windy —
+  // exactly like a real beach windsock filling with air.
   const SEG_COUNT=5;
-  const pivots=[];
+  const pivots=[]; // one Object3D per segment, chained parent->child
   let parent=group;
-  let attachY=3.15;
+  let attachY=3.15; // start at the ring
   for(let i=0;i<SEG_COUNT;i++){
     const t0=i/SEG_COUNT, t1=(i+1)/SEG_COUNT;
-    const r0=.20*(1-t0*.65), r1=.20*(1-t1*.65);
+    const r0=.20*(1-t0*.65), r1=.20*(1-t1*.65); // tapers toward the tail
     const segLen=.55;
 
+    // Pivot sits at the attach point; segment mesh hangs/extends from it along -Y locally,
+    // then we rotate the WHOLE pivot to point the segment in any direction we want
     const pivot=new THREE.Group();
-    pivot.position.y = (i===0) ? attachY : segLen;
+    pivot.position.y = (i===0) ? attachY : segLen; // first pivot at ring, rest chained by parent's local offset
     const segGeo=new THREE.CylinderGeometry(r1,r0,segLen,8,1,true);
-    segGeo.translate(0,-segLen/2,0);
+    segGeo.translate(0,-segLen/2,0); // shift so geometry extends downward from the pivot's origin
     const seg=new THREE.Mesh(segGeo, i%2===0?stripeA:stripeB);
     pivot.add(seg);
     parent.add(pivot);
@@ -1027,7 +930,7 @@ function createWindSock(x,z){
   windSock = {group, pivots};
 }
 
-// Rocks (instanced)
+// ── Rocks (instanced) ─────────────────────────────────────────────────────────
 function createRocks(){
   const rockMat=new THREE.MeshStandardMaterial({color:'#7a7a72',roughness:.95});
   const geo=new THREE.DodecahedronGeometry(.6,0);
@@ -1048,11 +951,9 @@ function createRocks(){
   scene.add(mesh);
 }
 
-// Time of day cycle
+// ── Time of day ───────────────────────────────────────────────────────────────
 function applyTime(){
-  const now = new Date();
-  const hour = now.getHours() + now.getMinutes() / 60;
-  
+  const now=new Date(), hour=now.getHours()+now.getMinutes()/60;
   let day; if(hour<5)day=0; else if(hour<7)day=(hour-5)/2; else if(hour<18)day=1; else if(hour<20)day=1-(hour-18)/2; else day=0;
   const night=1-day;
   const golden=Math.max(
@@ -1063,124 +964,131 @@ function applyTime(){
   const sky=new THREE.Color().lerpColors(new THREE.Color('#0d1220'),new THREE.Color('#1a6ab0'),day);
   if(golden>.01) sky.lerp(new THREE.Color('#c04010'),golden*.7);
   scene.background=sky; scene.fog.color.copy(sky);
-  
-  // Warm night intensity adjustments
+  // Warm amber tint at night (0.55), fully off during day
   const nightEmissive = night * 0.55;
   NIGHT_MATS.forEach(m => { m.emissiveIntensity = nightEmissive; });
 
-  // Hemisphere lighting
+  // Hemi — warm amber floor at night, strong enough to read ground voxels
   hemi.intensity = night * 2.2 + day * 1.8;
   const nightHemiCol = new THREE.Color('#4a3010');
   const dayHemiCol   = new THREE.Color('#6ab4f5');
   hemi.color.lerpColors(nightHemiCol, dayHemiCol, day);
   if(golden>.01) hemi.color.lerp(new THREE.Color('#ff6622'),golden*.6);
   hemi.groundColor.lerpColors(new THREE.Color('#3a2808'), new THREE.Color('#3a6a30'), day);
-  // Sun directional lighting
+  // Sun
   sun.intensity=day*1.8+golden*.5;
   sun.color.lerpColors(new THREE.Color('#8899cc'),new THREE.Color('#fff8e0'),day);
   if(golden>.2) sun.color.lerp(new THREE.Color('#ff7700'),golden*.8);
-  // Warm fill
+  // Night fill — close to ground, warm streetlamp yellow
   nightFill.intensity = night * 4.5;
   nightFill.position.y = 18;
   nightFill2.intensity = night * 3.0;
-  // Exposure
+  // Exposure — significantly brighter at night
   renderer.toneMappingExposure=(1.1 + day*.2) * AMB.brightness;
-
-  // Background setups
-  const panelAlpha = (0.16 + day * 0.14).toFixed(2);
-  const panelBg = `rgba(255,255,255,${panelAlpha})`;
-  
-  const ambPanel = document.getElementById('amb-panel');
-  if(ambPanel) ambPanel.style.background = panelBg;
+  // Task pill items — near-opaque during day
+  const itemAlpha = (0.5 + day * 0.15).toFixed(2);
+  const tdStyle = document.getElementById('td-item-style') || (()=>{
+    const el=document.createElement('style');el.id='td-item-style';document.head.appendChild(el);return el;
+  })();
+  tdStyle.textContent=`.td-item:not(.done){background:rgba(255,255,255,${itemAlpha}) !important}`;
 }
 
-// Build world meshes
+// ── Build world ───────────────────────────────────────────────────────────────
 buildTerrain();
 createRocks();
 createBambooGrove(10,-20);
 createBambooGrove(-8,20);
 createBambooGrove(-28,-8,IS_MOBILE?6:12);
 
+// Trees are task-driven — spawned by buildTaskTrees()
+
+// Torii gates
+// Main torii only — shore torii removed
 createTorii(3,0,0);
+
+// Shrine
 createShrine(-18,14);
 
+// Lantern strings
 createLanternString(3,0,0,16,IS_MOBILE?3:5,7);
 createLanternString(3,0,6,-16,IS_MOBILE?3:5,7);
 
+// Firepit
+
+
+// Wind sock — beach near the dock torches
 createWindSock(12, -16);
 
-// Tiki torches setups
+// Tiki torches — dock
 [[24.8,-20.9],[23.2,-19.1],[22.2,-23.2],[20.6,-21.4]].forEach(([x,z])=>createTikiTorch(x,z));
+// Tiki torches — shore torii
 [[22,22],[26,22],[21,24],[27,24]].forEach(([x,z])=>createTikiTorch(x,z));
+// Beach perimeter — pulled inward from edge
 (IS_MOBILE?[[-21,16],[-26,-6],[6,-26],[0,27]]:[[-21,16],[-16,21],[-26,-6],[-25,-9],[6,-26],[9,-25],[0,27],[6,26],[0,-27]]).forEach(([x,z])=>createTikiTorch(x,z));
 
-// Ambience settings setup
-const SEGS_COUNT = 8;
+// ── Ambience panel — real filled sliders + big toggle rows, centered modal ────
 const SLIDERS=[
-  {key:'brightness', label:'Brightness', min:.2, max:2,  fmt:v=>Math.round(v*100)+'%', color:'#e2935a'},
-  {key:'fogDensity',  label:'Fog',          min:.1, max:4,  fmt:v=>v.toFixed(1)+'×',      color:'#5a8fbf'},
+  {key:'brightness', label:'Brightness', min:.2, max:2,  fmt:v=>Math.round(v*100)+'%'},
+  {key:'fogDensity',  label:'Fog',         min:.1, max:4,  fmt:v=>v.toFixed(1)+'×'},
 ];
 const defaults={...AMB};
-const apRows=document.getElementById('ap-rows');
+const apSliders=document.getElementById('ap-sliders');
 
-function valToDotIndex(val,min,max){
-  return Math.max(0, Math.min(SEGS_COUNT-1, Math.round(((val-min)/(max-min))*(SEGS_COUNT-1))));
+function valToPct(val,min,max){
+  return Math.max(0, Math.min(100, ((val-min)/(max-min))*100));
 }
-function dotIndexToVal(idx,min,max){
-  return min + (idx/(SEGS_COUNT-1))*(max-min);
+function pctToVal(pct,min,max){
+  return min + (pct/100)*(max-min);
 }
 
-SLIDERS.forEach(({key,label,min,max,fmt,color})=>{
-  const row=document.createElement('div'); row.className='ap-row';
-  const peakIdx = valToDotIndex(AMB[key],min,max);
-
-  let segsHTML='';
-  for(let i=0;i<SEGS_COUNT;i++){
-    segsHTML+=`<div class="ap-seg${i===peakIdx?' peak':''}" data-i="${i}"></div>`;
-  }
+SLIDERS.forEach(({key,label,min,max,fmt})=>{
+  const row=document.createElement('div'); row.className='ap-slider';
+  const pct = valToPct(AMB[key],min,max);
 
   row.innerHTML=`
-    <span class="ap-lbl-text">${label}</span>
-    <div class="ap-segs" id="segs-${key}" style="--seg-color:${color}">${segsHTML}</div>
-    <span class="ap-val" id="v-${key}">${fmt(AMB[key])}</span>`;
-  apRows.appendChild(row);
+    <div class="ap-slider-head">
+      <span class="ap-slider-label">${label}</span>
+      <span class="ap-slider-val" id="v-${key}">${fmt(AMB[key])}</span>
+    </div>
+    <div class="ap-slider-track" id="track-${key}">
+      <div class="ap-slider-fill" id="fill-${key}" style="width:${pct}%"></div>
+    </div>`;
+  apSliders.appendChild(row);
 
-  const segsEl = row.querySelector('.ap-segs');
+  const trackEl = row.querySelector('.ap-slider-track');
+  const fillEl  = row.querySelector('.ap-slider-fill');
 
   function setFromClientX(clientX){
-    const rect = segsEl.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    const idx = Math.max(0, Math.min(SEGS_COUNT-1, Math.round(ratio * (SEGS_COUNT-1))));
-    AMB[key] = dotIndexToVal(idx, min, max);
+    const rect = trackEl.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    AMB[key] = pctToVal(pct, min, max);
     document.getElementById('v-'+key).textContent = fmt(AMB[key]);
-    [...segsEl.children].forEach((seg,i)=>{ seg.classList.toggle('peak', i === idx); });
+    fillEl.style.width = pct+'%';
     applyTime();
   }
 
   let dragging=false;
-  segsEl.addEventListener('pointerdown', e=>{ dragging=true; segsEl.setPointerCapture(e.pointerId); setFromClientX(e.clientX); });
-  segsEl.addEventListener('pointermove', e=>{ if(dragging) setFromClientX(e.clientX); });
-  segsEl.addEventListener('pointerup',   ()=>{ dragging=false; });
-  segsEl.addEventListener('pointercancel',()=>{ dragging=false; });
+  trackEl.addEventListener('pointerdown', e=>{ dragging=true; trackEl.setPointerCapture(e.pointerId); setFromClientX(e.clientX); });
+  trackEl.addEventListener('pointermove', e=>{ if(dragging) setFromClientX(e.clientX); });
+  trackEl.addEventListener('pointerup',   ()=>{ dragging=false; });
+  trackEl.addEventListener('pointercancel',()=>{ dragging=false; });
 });
 
-// Climate controls toggles
-const weatherRow=document.createElement('div'); weatherRow.className='ap-row ap-toggle-row';
-weatherRow.innerHTML=`
-  <div class="ap-toggle-item">
-    <span class="ap-toggle-icon">🌧</span>
-    <button class="ap-toggle" id="rain-toggle" role="switch" aria-checked="${AMB.rain}">
-      <span class="ap-toggle-knob"></span>
+// ── Rain + Wind — big labeled toggle rows ─────────────────────────────────────
+const apToggles=document.getElementById('ap-toggles');
+apToggles.innerHTML=`
+  <div class="ap-toggle-row2">
+    <button class="ap-toggle-big" id="rain-toggle" role="switch" aria-checked="${AMB.rain}">
+      <span class="knob"></span>
     </button>
+    <span class="ap-toggle-label2">Rain</span>
   </div>
-  <div class="ap-row-divider"></div>
-  <div class="ap-toggle-item">
-    <span class="ap-toggle-icon">💨</span>
-    <button class="ap-toggle" id="wind-toggle" role="switch" aria-checked="${AMB.wind}">
-      <span class="ap-toggle-knob"></span>
+  <div class="ap-toggle-row2">
+    <button class="ap-toggle-big" id="wind-toggle" role="switch" aria-checked="${AMB.wind}">
+      <span class="knob"></span>
     </button>
+    <span class="ap-toggle-label2">Wind</span>
   </div>`;
-apRows.appendChild(weatherRow);
 
 const rainToggleBtn = document.getElementById('rain-toggle');
 rainToggleBtn.classList.toggle('on', AMB.rain);
@@ -1200,37 +1108,12 @@ windToggleBtn.addEventListener('click', ()=>{
   if(!AMB.wind) resetWind();
 });
 
-// Task Labels showhide setup inside Settings
-const labelsRow = document.createElement('div');
-labelsRow.className = 'ap-row ap-toggle-row';
-labelsRow.innerHTML = `
-  <div class="ap-toggle-item" style="justify-content: space-between; width: 100%;">
-    <span class="ap-lbl-text" style="width: auto;">Task Labels</span>
-    <button class="ap-toggle" id="labels-toggle" role="switch" aria-checked="false">
-      <span class="ap-toggle-knob"></span>
-    </button>
-  </div>`;
-apRows.appendChild(labelsRow);
-
-const labelsToggleBtn = document.getElementById('labels-toggle');
-labelsToggleBtn.classList.toggle('on', labelsAlwaysOn);
-labelsToggleBtn.setAttribute('aria-checked', labelsAlwaysOn);
-labelsToggleBtn.addEventListener('click', ()=>{
-  labelsAlwaysOn = !labelsAlwaysOn;
-  labelsToggleBtn.classList.toggle('on', labelsAlwaysOn);
-  labelsToggleBtn.setAttribute('aria-checked', labelsAlwaysOn);
-  buildPersistentLabels();
-  updatePersistentLabelPositions();
-});
-
-// Reset logic
 document.getElementById('ap-reset').addEventListener('click', ()=>{
   Object.assign(AMB,defaults);
   SLIDERS.forEach(({key,min,max,fmt})=>{
-    const idx = valToDotIndex(AMB[key],min,max);
+    const pct = valToPct(AMB[key],min,max);
     document.getElementById('v-'+key).textContent=fmt(AMB[key]);
-    const segsEl=document.getElementById('segs-'+key);
-    [...segsEl.children].forEach((seg,i)=>{ seg.classList.toggle('peak', i === idx); });
+    document.getElementById('fill-'+key).style.width=pct+'%';
   });
   rainToggleBtn.classList.toggle('on', AMB.rain);
   rainToggleBtn.setAttribute('aria-checked', AMB.rain);
@@ -1241,60 +1124,39 @@ document.getElementById('ap-reset').addEventListener('click', ()=>{
   applyTime();
 });
 
-const panel = document.getElementById('amb-panel');
-const todoPanel = document.getElementById('todo-panel');
-const sBtn = document.getElementById('toggle-settings-btn');
-const tBtn = document.getElementById('toggle-tasks-btn');
-
-// Sync switcher button backgrounds with panel states
-function updateSwitcherState() {
-  const settingsOpen = !panel.classList.contains('hidden');
-  const tasksOpen = !todoPanel.classList.contains('hidden');
-
-  if (settingsOpen) {
-    sBtn.className = 'mode-btn settings-active';
-  } else {
-    sBtn.className = 'mode-btn settings-inactive';
-  }
-
-  if (tasksOpen) {
-    tBtn.className = 'mode-btn tasks-active';
-  } else {
-    tBtn.className = 'mode-btn tasks-inactive';
-  }
-}
-
-// Wire settings trigger button
-sBtn.addEventListener('click', e => {
+document.getElementById('amb-close').addEventListener('click', e=>{
   e.stopPropagation();
-  const isHidden = panel.classList.contains('hidden');
-  todoPanel.classList.add('hidden');
-  panel.classList.toggle('hidden', !isHidden);
-  updateSwitcherState();
+  document.getElementById('amb-panel').classList.add('hidden');
 });
 
-// Wire completed tasks trigger button
-tBtn.addEventListener('click', e => {
+// ── Settings icon — lives in the app header now, no circle background.
+// Plain, fast, no-overshoot open/close — no blur/contrast "goo" hack.
+const settingsFab=document.getElementById('settings-fab'), panel=document.getElementById('amb-panel');
+settingsFab.addEventListener('click', e=>{
   e.stopPropagation();
-  const isHidden = todoPanel.classList.contains('hidden');
-  panel.classList.add('hidden');
-  todoPanel.classList.toggle('hidden', !isHidden);
-  updateSwitcherState();
+  const opening = panel.classList.contains('hidden');
+  document.getElementById('add-panel').classList.add('hidden');
+  panel.classList.toggle('hidden', !opening);
 });
 
 applyTime();
 setInterval(applyTime, 60000);
 
-// Wish pole
+// ── Todo ──────────────────────────────────────────────────────────────────────
+// ── Tanzaku wish-strip pole ───────────────────────────────────────────────────
+// Planted near the shrine at (-18, 14)
 const TANZAKU_X = -15, TANZAKU_Z = 12;
 const tanzakuGroup = new THREE.Group();
 
+// Bamboo pole
 const tPole = new THREE.Mesh(new THREE.CylinderGeometry(.08,.11,5.5,6), MAT.bam);
 tPole.position.y = 2.75;
 tanzakuGroup.add(tPole);
+// Crossbar
 const tBar = new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,2.2,5), MAT.bamDark);
 tBar.rotation.z = Math.PI/2; tBar.position.y = 5.1;
 tanzakuGroup.add(tBar);
+// Node rings
 [1.2, 2.5, 3.8].forEach(y=>{
   const node = new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.1,6), MAT.bamDark);
   node.position.y = y; tanzakuGroup.add(node);
@@ -1303,18 +1165,20 @@ tanzakuGroup.add(tBar);
 tanzakuGroup.position.set(TANZAKU_X, getH(TANZAKU_X, TANZAKU_Z), TANZAKU_Z);
 scene.add(tanzakuGroup);
 
+// Strip colours — pending are vivid, done are muted/grey
 const STRIP_COLORS = [
   '#e8507a','#5ab4e8','#e8c84a','#7ad478','#c87ae8',
   '#e87850','#4ae8d4','#e8e87a','#d47ab4','#78a0e8',
 ];
 const DONE_EMISSIVE = '#303030';
-const stripMeshes = [];
+const stripMeshes = []; // parallel to todos array
 
 function buildStrips(){
+  // Remove old strip meshes
   stripMeshes.forEach(m=>tanzakuGroup.remove(m));
   stripMeshes.length = 0;
 
-  const MAX = 10;
+  const MAX = 10; // cap at 10 strips so it doesn't get absurd
   const visible = todos.slice(0, MAX);
   const total = visible.length;
 
@@ -1327,15 +1191,18 @@ function buildStrips(){
       roughness: .8,
     });
 
+    // Hang position along crossbar — spread across -0.9 to +0.9
     const spread = total > 1 ? (i/(total-1)) * 1.8 - 0.9 : 0;
+    // Slight random dangle offset per strip (seeded from id)
     const seed = (t.id || i) % 100;
     const sway = (seed/100 - 0.5) * 0.18;
-    const hang = 0.28 + (seed % 5) * 0.06;
+    const hang = 0.28 + (seed % 5) * 0.06; // how far below bar
 
     const strip = new THREE.Mesh(new THREE.BoxGeometry(.13,.48,.025), mat);
     strip.position.set(spread, 5.1 - hang, 0);
     strip.rotation.z = sway;
 
+    // Tiny string connecting strip to bar
     const string = new THREE.Mesh(
       new THREE.CylinderGeometry(.008,.008, hang, 3),
       new THREE.MeshStandardMaterial({color:'#c8c0a0'})
@@ -1347,21 +1214,22 @@ function buildStrips(){
   });
 }
 
-// Task data management
+// ── Todo logic ────────────────────────────────────────────────────────────────
 const STORE_KEY = 'vg-todos';
 let todos = [];
 try { todos = JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch(e){ todos=[]; }
-let completedOpen = false;
+let completedOpen = false; // completed section collapsed by default
 
 function saveTodos(){
   localStorage.setItem(STORE_KEY, JSON.stringify(todos));
   buildStrips();
   buildTaskTrees();
+  updateSubtitle();
 }
 
 function fmtDate(ts){
   if(!ts) return '';
-  return new Date(ts).toLocaleDateString([],{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+  return new Date(ts).toLocaleDateString([],{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 }
 
 function buildTodoItemEl(t, i){
@@ -1370,17 +1238,17 @@ function buildTodoItemEl(t, i){
   const dateLabel = t.done && t.completedAt
     ? `Completed ${fmtDate(t.completedAt)}`
     : `Planted ${fmtDate(t.createdAt || t.id)}`;
-    
+  const statusLabel = t.done ? '' : `<span class="td-status">Ongoing</span>`;
   item.innerHTML = `
-    <div class="td-body" style="order: 1; flex: 1; min-width: 0;">
+    <div class="td-check">${t.done?'✓':''}</div>
+    <div class="td-body">
       <span class="td-text">${t.text.replace(/</g,'&lt;')}</span>
+      ${statusLabel}
       <span class="td-date">${dateLabel}</span>
     </div>
-    <button class="td-del" data-i="${i}">×</button>
-    <div class="td-check">${t.done?'✓':''}</div>`;
-    
-  item.querySelector('.td-check').addEventListener('click',(e)=>{ e.stopPropagation(); todos[i].done=!todos[i].done; todos[i].completedAt=todos[i].done?Date.now():null; saveTodos(); renderTodos(); });
-  item.querySelector('.td-body').addEventListener('click',(e)=>{ e.stopPropagation(); todos[i].done=!todos[i].done; todos[i].completedAt=todos[i].done?Date.now():null; saveTodos(); renderTodos(); });
+    <button class="td-del" data-i="${i}">×</button>`;
+  item.querySelector('.td-check').addEventListener('click',()=>{ todos[i].done=!todos[i].done; todos[i].completedAt=todos[i].done?Date.now():null; saveTodos(); renderTodos(); });
+  item.querySelector('.td-text').addEventListener('click',()=>{ todos[i].done=!todos[i].done; todos[i].completedAt=todos[i].done?Date.now():null; saveTodos(); renderTodos(); });
   item.querySelector('.td-del').addEventListener('click',e=>{ e.stopPropagation(); todos.splice(i,1); saveTodos(); renderTodos(); });
   return item;
 }
@@ -1397,24 +1265,13 @@ function renderTodos(){
   if(doneIdx.length > 0){
     const toggle = document.createElement('div');
     toggle.className = 'ap-completed-toggle' + (completedOpen?' open':'');
-    toggle.innerHTML = `<span>Completed · ${doneIdx.length}</span><span class="chev">▾</span>`;
-    toggle.addEventListener('click', (e)=>{ e.stopPropagation(); completedOpen = !completedOpen; renderTodos(); });
+    toggle.innerHTML = `<span>Completed · ${doneIdx.length}</span><span class="chev"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>`;
+    toggle.addEventListener('click', ()=>{ completedOpen = !completedOpen; renderTodos(); });
     list.appendChild(toggle);
 
     if(completedOpen){
       doneIdx.forEach(i=> list.appendChild(buildTodoItemEl(todos[i], i)));
     }
-  }
-
-  // Populate card header live metadata
-  const countLabel = document.getElementById('td-count-text');
-  if(countLabel){
-    const openCount = todos.filter(t=>!t.done).length;
-    countLabel.textContent = `${openCount} ${openCount === 1 ? 'task' : 'tasks'}`;
-  }
-  const dateLabel = document.getElementById('td-date-text');
-  if(dateLabel){
-    dateLabel.textContent = new Date().toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'});
   }
 }
 
@@ -1427,46 +1284,57 @@ function addTodo(){
   inp.value = '';
 }
 
+function updateSubtitle(){
+  const el = document.getElementById('app-subtitle');
+  if(!el) return;
+  const openCount = todos.filter(t=>!t.done).length;
+  el.textContent = openCount === 1 ? '1 task' : (openCount + ' tasks');
+}
+
 const taskInput = document.getElementById('task-input');
 taskInput.addEventListener('keydown', e=>{
   if(e.key==='Enter'){ e.preventDefault(); addTodo(); }
-  if(e.key==='Tab'){
-    e.preventDefault();
-    todoPanel.classList.toggle('hidden');
-    updateSwitcherState();
-  }
 });
+// Clicking the canvas blurs the input so orbit controls work
 canvas.addEventListener('pointerdown', ()=> taskInput.blur());
 
 document.getElementById('task-submit').addEventListener('click', addTodo);
 
-// Add task footer logic
-document.getElementById('td-add-row').addEventListener('click', e=>{
+// ── "+" header icon — slides the add-task panel up from the bottom ──────────
+const addFab = document.getElementById('add-fab');
+const addPanel = document.getElementById('add-panel');
+addFab.addEventListener('click', e=>{
   e.stopPropagation();
-  todoPanel.classList.add('hidden');
-  updateSwitcherState();
-  taskInput.focus();
+  const opening = addPanel.classList.contains('hidden');
+  addPanel.classList.add('hidden');
+  panel.classList.add('hidden');
+  if(opening){
+    addPanel.classList.remove('hidden');
+    setTimeout(()=>taskInput.focus(), 260); // wait for slide-up transition
+  }
 });
 
-// Click anywhere outside panels dismisses panels
+// Click anywhere outside panels dismisses whichever is open
 document.addEventListener('click', ()=>{
   panel.classList.add('hidden');
-  todoPanel.classList.add('hidden');
-  updateSwitcherState();
+  addPanel.classList.add('hidden');
 });
+// Prevent clicks inside panels from bubbling up
 document.getElementById('amb-panel').addEventListener('click', e=>e.stopPropagation());
-document.getElementById('todo-panel').addEventListener('click', e=>e.stopPropagation());
+addPanel.addEventListener('click', e=>e.stopPropagation());
 
 renderTodos();
+updateSubtitle();
 buildStrips();
 buildTaskTrees();
 
-// Sakura petals around main torii
+// ── Sakura petals around main torii
+// Tiny flat quads, instanced — one draw call, very cheap
 const PETAL_COUNT = IS_MOBILE ? 18 : 35;
-const PETAL_CX = 3, PETAL_CZ = 0;
-const PETAL_R  = 6;
-const PETAL_TOP = getH(PETAL_CX, PETAL_CZ) + 14;
-const PETAL_BOT = PETAL_TOP - 10;
+const PETAL_CX = 3, PETAL_CZ = 0; // centred on main torii
+const PETAL_R  = 6;  // spawn radius
+const PETAL_TOP = getH(PETAL_CX, PETAL_CZ) + 14; // just above torii top
+const PETAL_BOT = PETAL_TOP - 10;                 // drop range
 
 const petalGeo = new THREE.PlaneGeometry(.22, .16);
 const petalMat = new THREE.MeshStandardMaterial({
@@ -1478,16 +1346,17 @@ const petalMesh = new THREE.InstancedMesh(petalGeo, petalMat, PETAL_COUNT);
 petalMesh.frustumCulled = false;
 scene.add(petalMesh);
 
+// Per-petal state — stored in plain arrays for speed
 const petal = {
   x: new Float32Array(PETAL_COUNT),
   y: new Float32Array(PETAL_COUNT),
   z: new Float32Array(PETAL_COUNT),
-  vx:new Float32Array(PETAL_COUNT),
+  vx:new Float32Array(PETAL_COUNT), // horizontal drift speed
   vz:new Float32Array(PETAL_COUNT),
-  vy:new Float32Array(PETAL_COUNT),
-  phase:new Float32Array(PETAL_COUNT),
-  spin:new Float32Array(PETAL_COUNT),
-  rot: new Float32Array(PETAL_COUNT),
+  vy:new Float32Array(PETAL_COUNT), // fall speed
+  phase:new Float32Array(PETAL_COUNT), // sway phase offset
+  spin:new Float32Array(PETAL_COUNT),  // rotation speed
+  rot: new Float32Array(PETAL_COUNT),  // current rotation
 };
 
 const _petalDummy = new THREE.Object3D();
@@ -1495,7 +1364,7 @@ function resetPetal(i){
   const a = Math.random()*Math.PI*2, r = Math.random()*PETAL_R;
   petal.x[i] = PETAL_CX + Math.cos(a)*r;
   petal.z[i] = PETAL_CZ + Math.sin(a)*r;
-  petal.y[i] = PETAL_TOP - Math.random()*2;
+  petal.y[i] = PETAL_TOP - Math.random()*2; // stagger spawn height
   petal.vx[i]= (Math.random()-.5)*.012;
   petal.vz[i]= (Math.random()-.5)*.012;
   petal.vy[i]= .018 + Math.random()*.014;
@@ -1505,7 +1374,7 @@ function resetPetal(i){
 }
 for(let i=0;i<PETAL_COUNT;i++){
   resetPetal(i);
-  petal.y[i] = PETAL_BOT + Math.random()*(PETAL_TOP-PETAL_BOT);
+  petal.y[i] = PETAL_BOT + Math.random()*(PETAL_TOP-PETAL_BOT); // spread on load
 }
 
 function tickPetals(elapsed){
@@ -1528,14 +1397,16 @@ function tickPetals(elapsed){
   petalMesh.instanceMatrix.needsUpdate = true;
 }
 
-// Rain
+// ── Rain — toggled on/off via Ambience panel ───────────────────────────────────
+// Reuses the same lightweight instanced-mesh pattern as petals: thin
+// streak quads falling fast, spread across a wide swath of the island.
 const RAIN_COUNT = IS_MOBILE ? 60 : 140;
-const RAIN_CX = 0, RAIN_CZ = 0;
-const RAIN_R  = 30;
-const RAIN_TOP = 26;
-const RAIN_BOT = -2;
+const RAIN_CX = 0, RAIN_CZ = 0;     // centred on island
+const RAIN_R  = 30;                 // wide spawn radius — covers most of the island
+const RAIN_TOP = 26;                // spawn height above terrain
+const RAIN_BOT = -2;                // despawn just below water level
 
-const rainGeo = new THREE.PlaneGeometry(.045, .9);
+const rainGeo = new THREE.PlaneGeometry(.045, .9); // thin vertical streak
 const rainMat = new THREE.MeshStandardMaterial({
   color:'#bcd8ee', emissive:'#9fc3e8', emissiveIntensity:.25,
   roughness:.3, side:THREE.DoubleSide,
@@ -1543,16 +1414,16 @@ const rainMat = new THREE.MeshStandardMaterial({
 });
 const rainMesh = new THREE.InstancedMesh(rainGeo, rainMat, RAIN_COUNT);
 rainMesh.frustumCulled = false;
-rainMesh.visible = false;
+rainMesh.visible = false; // hidden until toggled on
 scene.add(rainMesh);
 
 const rain = {
   x: new Float32Array(RAIN_COUNT),
   y: new Float32Array(RAIN_COUNT),
   z: new Float32Array(RAIN_COUNT),
-  vy:new Float32Array(RAIN_COUNT),
-  vx:new Float32Array(RAIN_COUNT),
-  len:new Float32Array(RAIN_COUNT),
+  vy:new Float32Array(RAIN_COUNT), // fall speed — much faster than petals
+  vx:new Float32Array(RAIN_COUNT), // slight wind drift
+  len:new Float32Array(RAIN_COUNT),// streak length variance
 };
 
 const _rainDummy = new THREE.Object3D();
@@ -1560,14 +1431,14 @@ function resetRain(i){
   const a = Math.random()*Math.PI*2, r = Math.random()*RAIN_R;
   rain.x[i] = RAIN_CX + Math.cos(a)*r;
   rain.z[i] = RAIN_CZ + Math.sin(a)*r;
-  rain.y[i] = RAIN_TOP - Math.random()*4;
-  rain.vy[i]= .42 + Math.random()*.22;
-  rain.vx[i]= .04 + Math.random()*.03;
+  rain.y[i] = RAIN_TOP - Math.random()*4; // stagger spawn height
+  rain.vy[i]= .42 + Math.random()*.22;    // fast fall
+  rain.vx[i]= .04 + Math.random()*.03;    // gentle constant wind drift
   rain.len[i]= .7 + Math.random()*.6;
 }
 for(let i=0;i<RAIN_COUNT;i++){
   resetRain(i);
-  rain.y[i] = RAIN_BOT + Math.random()*(RAIN_TOP-RAIN_BOT);
+  rain.y[i] = RAIN_BOT + Math.random()*(RAIN_TOP-RAIN_BOT); // spread on load
 }
 
 function tickRain(){
@@ -1577,7 +1448,7 @@ function tickRain(){
     rain.x[i] += rain.vx[i];
     if(rain.y[i] < RAIN_BOT) resetRain(i);
     _rainDummy.position.set(rain.x[i], rain.y[i], rain.z[i]);
-    _rainDummy.rotation.set(0.12, 0, 0);
+    _rainDummy.rotation.set(0.12, 0, 0); // slight tilt to match wind drift
     _rainDummy.scale.set(1, rain.len[i], 1);
     _rainDummy.updateMatrix();
     rainMesh.setMatrixAt(i, _rainDummy.matrix);
@@ -1585,15 +1456,21 @@ function tickRain(){
   rainMesh.instanceMatrix.needsUpdate = true;
 }
 
-// Wind
-const WIND_DIR = new THREE.Vector2(0.85, 0.35).normalize();
+// ── Wind — toggled on/off via Ambience panel ───────────────────────────────────
+// A single wind direction drives everything so it reads as one coherent breeze:
+// bamboo leans/gusts that direction, lanterns swing like pendulums along it,
+// and a wind sock fills out and points downwind. No new draw calls for bamboo
+// or trees — only the wind sock adds a few small static-count meshes.
+const WIND_DIR = new THREE.Vector2(0.85, 0.35).normalize(); // fixed direction (x,z)
 const _windDummy = new THREE.Object3D();
 
 function tickWind(elapsed){
   if(!AMB.wind) return;
 
+  // Gust strength — slow swell so it feels like a real changing breeze, not noise
   const gust = 0.55 + Math.sin(elapsed*.35)*.25 + Math.sin(elapsed*.9)*.12;
 
+  // Bamboo — every stalk leans the SAME direction, with a fast small flutter on top
   bambooGroves.forEach(grove=>{
     const {culmM, count, baseX, baseZ, baseY, baseH, phase} = grove;
     for(let i=0;i<count;i++){
@@ -1601,6 +1478,8 @@ function tickWind(elapsed){
       const lean = (0.16 * gust) + flutter;
       _windDummy.position.set(baseX[i], baseY[i] + baseH[i]/2, baseZ[i]);
       _windDummy.scale.set(1, baseH[i]/7, 1);
+      // Rotate around the axis perpendicular to wind direction so the bend
+      // always points downwind regardless of each stalk's own facing
       _windDummy.rotation.set(lean*WIND_DIR.y, phase[i]*0.3, -lean*WIND_DIR.x);
       _windDummy.updateMatrix();
       culmM.setMatrixAt(i, _windDummy.matrix);
@@ -1608,24 +1487,30 @@ function tickWind(elapsed){
     culmM.instanceMatrix.needsUpdate = true;
   });
 
+  // Lanterns — pendulum swing along the wind axis, gentle and in unison
   lanternGroups.forEach(({group, phase})=>{
     const swing = Math.sin(elapsed*1.4 + phase*0.15) * 0.3 * gust + 0.22*gust;
     group.rotation.x =  swing * WIND_DIR.y;
     group.rotation.z = -swing * WIND_DIR.x;
   });
 
+  // Task tree canopies — soft lean, same direction as everything else
   taskTrees.forEach(entry=>{
     const lean = 0.05 * gust;
     entry.group.rotation.x =  lean * WIND_DIR.y;
     entry.group.rotation.z = -lean * WIND_DIR.x;
   });
 
+  // Wind sock — chain of pivots: straight down when calm, swings up toward
+  // horizontal (pointing downwind) as gust strength increases. Tip flutters.
   if(windSock){
-    const fill = Math.min(1, Math.max(0, gust*1.2));
+    const fill = Math.min(1, Math.max(0, gust*1.2)); // 0=limp, 1=fully filled/horizontal
     const windYaw = Math.atan2(WIND_DIR.x, WIND_DIR.y);
     windSock.group.rotation.y = windYaw;
     windSock.pivots.forEach((pivot,i)=>{
       const t=(i+1)/windSock.pivots.length;
+      // Calm: each segment hangs straight down (local -X rotation of 90° puts it vertical).
+      // Filled: rotates toward horizontal (0°), progressively more toward the tail.
       const targetAngle = THREE.MathUtils.lerp(Math.PI/2, 0.08, fill*Math.min(1,t*1.3));
       const flutter = Math.sin(elapsed*4.5 + i*1.3) * 0.06 * fill * t;
       pivot.rotation.x = targetAngle + flutter;
@@ -1643,16 +1528,16 @@ function resetWind(){
       _windDummy.updateMatrix();
       culmM.setMatrixAt(i, _windDummy.matrix);
     }
-    culmM.instanceMatrix.needsUpdate=true;
+    culmM.instanceMatrix.needsUpdate = true;
   });
   lanternGroups.forEach(({group})=>{ group.rotation.x=0; group.rotation.z=0; });
   taskTrees.forEach(entry=>{ entry.group.rotation.x=0; entry.group.rotation.z=0; });
   if(windSock){
-    windSock.pivots.forEach(pivot=>{ pivot.rotation.x = Math.PI/2; });
+    windSock.pivots.forEach(pivot=>{ pivot.rotation.x = Math.PI/2; }); // hang straight down at rest
   }
 }
 
-// Animate loop
+// ── Animate ───────────────────────────────────────────────────────────────────
 const clock = new THREE.Clock();
 let frameN=0;
 function animate(){
